@@ -26,7 +26,7 @@ class Client(object):
                 with open(dotrc) as f:
                     for l in f.readlines():
                         k, v = l.strip().split(':', 1)
-                        config[k] = v
+                        config[k] = v.strip()
                 url = config.get('url')
                 key = config.get('key')
 
@@ -45,25 +45,32 @@ class Client(object):
         if end_point is None or api_key is None or api_key is None:
             raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
 
-        if verify is None:
-            verify = True
-
         self.end_point = end_point
         self.user_id = user_id
         self.api_key = api_key
 
         self.verbose = verbose
-        self.verify = verify
+        self.verify = True if verify else False
         self.timeout = timeout
         self.sleep_max = 120
         self.full_stack = full_stack
+
+        self._trace(dict(end_point=self.end_point,
+                         user_id=self.user_id,
+                         api_key=self.api_key,
+                         verbose=self.verbose,
+                         verify=self.verify,
+                         timeout=self.timeout,
+                         sleep_max=self.sleep_max,
+                         full_stack=self.full_stack,
+                         ))
 
         print("===>", self.end_point, self.user_id, self.api_key, self.verify)
 
     def get_resource(self, name, request, target=None):
         self._api("%s/resources/%s" % (self.end_point, name), request, target)
 
-    def _download(self, url, local_filename=None):
+    def _download(self, url, size, local_filename=None):
 
         if local_filename is None:
             local_filename = url.split('/')[-1]
@@ -114,12 +121,20 @@ class Client(object):
 
             if reply['state'] == 'completed':
 
-                if self.target:
-                    self._download(reply['location'], int(reply['content_length']), target, verify=self.verify)
+                if target:
+                    self._download(reply['location'], int(reply['content_length']), target)
                 else:
+                    self._trace("HEAD %s" % (reply['location'],))
                     metadata = session.head(reply['location'], verify=self.verify)
                     metadata.raise_for_status()
-                    print(metadata)
+                    self._trace(metadata.headers)
+
+                if 'request_id' in reply:
+                    rid = reply['request_id']
+                    self._trace("DELETE %s" % (reply['location'],))
+                    metadata = session.delete(reply['location'], verify=self.verify)
+                    self._trace("DELETE returns %s %s" % (metadata.status_code, metadata.reason))
+                    # metadata.raise_for_status()
 
                 self._trace("Done")
                 return
@@ -130,8 +145,8 @@ class Client(object):
                 if self.timeout and (time.time() - start > self.timeout):
                     raise Exception("TIMEOUT")
 
-                time.sleep(sleep)
                 self._trace("Request ID is %s, sleep %s" % (rid, sleep))
+                time.sleep(sleep)
                 sleep *= 1.5
                 if sleep > self.sleep_max:
                     sleep = self.sleep_max
