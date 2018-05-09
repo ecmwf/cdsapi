@@ -76,11 +76,14 @@ class Client(object):
             local_filename = url.split('/')[-1]
 
         r = requests.get(url, stream=True, verify=self.verify)
+        total = 0
         with open(local_filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
                 if chunk:
                     f.write(chunk)
+                    total += len(chunk)
 
+        assert total == size
         return local_filename
 
     def _api(self, url, request, target):
