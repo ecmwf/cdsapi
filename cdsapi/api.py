@@ -6,7 +6,7 @@ import os
 
 
 def bytes_to_string(n):
-    u = ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi']
+    u = ['', 'K', 'M', 'G', 'T', 'P']
     i = 0
     while n >= 1024:
         n /= 1024.0
@@ -131,10 +131,12 @@ class Client(object):
 
                 if 'request_id' in reply:
                     rid = reply['request_id']
-                    self._trace("DELETE %s" % (reply['location'],))
-                    metadata = session.delete(reply['location'], verify=self.verify)
-                    self._trace("DELETE returns %s %s" % (metadata.status_code, metadata.reason))
-                    # metadata.raise_for_status()
+
+                    task_url = "%s/tasks/%s" % (self.end_point, rid)
+                    self._trace("DELETE %s" % (task_url,))
+                    delete = session.delete(task_url, verify=self.verify)
+                    self._trace("DELETE returns %s %s" % (delete.status_code, delete.reason))
+                    delete.raise_for_status()
 
                 self._trace("Done")
                 return
@@ -151,7 +153,10 @@ class Client(object):
                 if sleep > self.sleep_max:
                     sleep = self.sleep_max
 
-                result = session.get("%s/tasks/%s" % (self.end_point, rid), verify=self.verify)
+                task_url = "%s/tasks/%s" % (self.end_point, rid)
+                self._trace("GET %s" % (task_url,))
+
+                result = session.get(task_url, verify=self.verify)
                 result.raise_for_status()
                 reply = result.json()
                 continue
