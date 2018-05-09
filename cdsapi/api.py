@@ -2,6 +2,7 @@ import requests
 import json
 import time
 import datetime
+import os
 
 
 def bytes_to_string(n):
@@ -15,15 +16,49 @@ def bytes_to_string(n):
 
 class Client(object):
 
-    def __init__(self, end_point, user_id, api_key, verbose=False, verify=True, timeout=None, full_stack=False):
+    def __init__(self, end_point=None, user_id=None, api_key=None, verbose=False, verify=None, timeout=None, full_stack=False):
+
+        dotrc = os.path.expanduser('~/.cdsapirc')
+
+        if end_point is None or user_id is None or api_key is None:
+            if os.path.exists(dotrc):
+                config = {}
+                with open(dotrc) as f:
+                    for l in f.readlines():
+                        k, v = l.strip().split(':', 1)
+                        config[k] = v
+                url = config.get('url')
+                key = config.get('key')
+
+                if end_point is None:
+                    end_point = url
+
+                if user_id is None and key is not None:
+                    user_id = key.split(':')[0]
+
+                if api_key is None and key is not None:
+                    api_key = key.split(':')[-1]
+
+                if verify is None:
+                    verify = int(config.get('verify', 1))
+
+        if end_point is None or api_key is None or api_key is None:
+            raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
+
+        if verify is None:
+            verify = True
+
         self.end_point = end_point
         self.user_id = user_id
         self.api_key = api_key
+
         self.verbose = verbose
         self.verify = verify
         self.timeout = timeout
         self.sleep_max = 120
         self.full_stack = full_stack
+
+        print("===>", self.end_point, self.user_id, self.api_key, self.verify)
 
     def get_resource(self, name, request, target=None):
         self._api("%s/resources/%s" % (self.end_point, name), request, target)
@@ -51,9 +86,9 @@ class Client(object):
         result.raise_for_status()
 
         try:
-        	reply = result.json()
-        except:
-        	raise Exception(result.text)
+            reply = result.json()
+        except Exception:
+            raise Exception(result.text)
 
         try:
             result.raise_for_status()
