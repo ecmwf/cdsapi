@@ -1,0 +1,3 @@
+include *.in
+include *.rst
+recursive-include cdsapi *.py
