@@ -69,7 +69,7 @@ class Client(object):
                                              full_stack=self.full_stack,
                                              ))
 
-    def get_resource(self, name, request, target=None):
+    def retrieve(self, name, request, target=None):
         self._api('%s/resources/%s' % (self.end_point, name), request, target)
 
     def _download(self, url, size, local_filename=None):
