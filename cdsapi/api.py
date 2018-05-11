@@ -14,6 +14,14 @@ def bytes_to_string(n):
     return "%g%s" % (int(n * 10 + 0.5) / 10.0, u[i])
 
 
+def robust(call):
+
+    def wrapped(*args, **kwargs):
+        return call(*args, **kwargs)
+
+    return wrapped
+
+
 class Client(object):
 
     def __init__(self,
@@ -73,7 +81,7 @@ class Client(object):
         if local_filename is None:
             local_filename = url.split('/')[-1]
 
-        r = requests.get(url, stream=True, verify=self.verify)
+        r = robust(requests.get)(url, stream=True, verify=self.verify)
         total = 0
         with open(local_filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=1024):
@@ -90,11 +98,14 @@ class Client(object):
         session.auth = tuple(self.api_key.split(':', 2))
 
         self._trace("POST %s %s" % (url, json.dumps(request)))
-        result = session.post(url, json=request, verify=self.verify)
+        result = robust(session.post)(url, json=request, verify=self.verify)
+        reply = {}
+        print(result)
 
         try:
             reply = result.json()
             result.raise_for_status()
+            reply = result.json()
         except Exception:
             if 'message' in reply:
                 error = reply['message']
@@ -122,7 +133,7 @@ class Client(object):
                     self._download(reply['location'], int(reply['content_length']), target)
                 else:
                     self._trace("HEAD %s" % (reply['location'],))
-                    metadata = session.head(reply['location'], verify=self.verify)
+                    metadata = robust(session.head)(reply['location'], verify=self.verify)
                     metadata.raise_for_status()
                     self._trace(metadata.headers)
 
@@ -133,7 +144,10 @@ class Client(object):
                     self._trace("DELETE %s" % (task_url,))
                     delete = session.delete(task_url, verify=self.verify)
                     self._trace("DELETE returns %s %s" % (delete.status_code, delete.reason))
-                    delete.raise_for_status()
+                    try:
+                        delete.raise_for_status()
+                    except Exception:
+                        self._warning("DELETE %s returns %s %s" % (task_url, delete.status_code, delete.reason))
 
                 self._trace("Done")
                 return
@@ -153,7 +167,7 @@ class Client(object):
                 task_url = "%s/tasks/%s" % (self.end_point, rid)
                 self._trace("GET %s" % (task_url,))
 
-                result = session.get(task_url, verify=self.verify)
+                result = robust(session.get)(task_url, verify=self.verify)
                 result.raise_for_status()
                 reply = result.json()
                 continue
