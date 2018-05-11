@@ -12,5 +12,8 @@ c = cdsapi.Client()
 
 
 c.retrieve("insitu-glaciers-elevation-mass",
-           {"variable": "elevation_change", "format": "tgz"},
-           "data.tgz")
+           {
+               "variable": "elevation_change",
+               "format": "tgz"
+           },
+           "dowload.data")
