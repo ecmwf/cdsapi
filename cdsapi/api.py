@@ -65,8 +65,6 @@ class Client(object):
                          full_stack=self.full_stack,
                          ))
 
-        print("===>", self.end_point, self.user_id, self.api_key, self.verify)
-
     def get_resource(self, name, request, target=None):
         self._api("%s/resources/%s" % (self.end_point, name), request, target)
 
@@ -93,14 +91,9 @@ class Client(object):
 
         self._trace("POST %s %s" % (url, json.dumps(request)))
         result = session.post(url, json=request, verify=self.verify)
-        result.raise_for_status()
 
         try:
             reply = result.json()
-        except Exception:
-            raise Exception(result.text)
-
-        try:
             result.raise_for_status()
         except Exception:
             if 'message' in reply:
@@ -167,7 +160,7 @@ class Client(object):
             if reply['state'] in ('failed',):
                 print("Message: %s" % (reply['error'].get("message"),))
                 print("Reason:  %s" % (reply['error'].get("reason"),))
-                for n in reply['error']['context']['traceback'].split('\n'):
+                for n in reply.get('error', {}).get('context', {}).get('traceback', '').split('\n'):
                     if n.strip() == '' and not self.full_stack:
                         break
                     print("  %s" % (n,))
