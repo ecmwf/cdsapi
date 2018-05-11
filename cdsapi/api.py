@@ -16,11 +16,16 @@ def bytes_to_string(n):
 
 class Client(object):
 
-    def __init__(self, end_point=None, user_id=None, api_key=None, verbose=False, verify=None, timeout=None, full_stack=False):
+    def __init__(self,
+                 end_point=os.environ.get("CDSAPI_URL"),
+                 api_key=os.environ.get("CDSAPI_KEY"),
+                 verbose=False,
+                 verify=None,
+                 timeout=None, full_stack=False):
 
-        dotrc = os.path.expanduser('~/.cdsapirc')
+        dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser('~/.cdsapirc'))
 
-        if end_point is None or user_id is None or api_key is None:
+        if end_point is None or api_key is None:
             if os.path.exists(dotrc):
                 config = {}
                 with open(dotrc) as f:
@@ -30,14 +35,11 @@ class Client(object):
                 url = config.get('url')
                 key = config.get('key')
 
+                if api_key is None:
+                    api_key = key
+
                 if end_point is None:
                     end_point = url
-
-                if user_id is None and key is not None:
-                    user_id = key.split(':')[0]
-
-                if api_key is None and key is not None:
-                    api_key = key.split(':')[-1]
 
                 if verify is None:
                     verify = int(config.get('verify', 1))
@@ -46,7 +48,6 @@ class Client(object):
             raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
 
         self.end_point = end_point
-        self.user_id = user_id
         self.api_key = api_key
 
         self.verbose = verbose
@@ -56,7 +57,6 @@ class Client(object):
         self.full_stack = full_stack
 
         self._trace(dict(end_point=self.end_point,
-                         user_id=self.user_id,
                          api_key=self.api_key,
                          verbose=self.verbose,
                          verify=self.verify,
@@ -87,7 +87,7 @@ class Client(object):
     def _api(self, url, request, target):
 
         session = requests.Session()
-        session.auth = (str(self.user_id), str(self.api_key))
+        session.auth = tuple(self.api_key.split(':', 2))
 
         self._trace("POST %s %s" % (url, json.dumps(request)))
         result = session.post(url, json=request, verify=self.verify)
@@ -102,7 +102,8 @@ class Client(object):
                 if 'context' in reply and 'required_terms' in reply['context']:
                     e = [error]
                     for t in reply['context']['required_terms']:
-                        e.append("To access this resource, you first need to accept the terms of '%s' at %s" % (t['title'], t['url']))
+                        e.append("To access this resource, you first need to accept the terms of '%s' at %s" %
+                                 (t['title'], t['url']))
                     error = '. '.join(e)
                 raise Exception(error)
             else:
