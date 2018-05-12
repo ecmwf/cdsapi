@@ -191,12 +191,12 @@ class Client(object):
                 continue
 
             if reply['state'] in ('failed',):
-                print('Message: %s' % (reply['error'].get('message'),))
-                print('Reason:  %s' % (reply['error'].get('reason'),))
+                self.logger.error('Message: %s' % (reply['error'].get('message'),))
+                self.logger.error('Reason:  %s' % (reply['error'].get('reason'),))
                 for n in reply.get('error', {}).get('context', {}).get('traceback', '').split('\n'):
                     if n.strip() == '' and not self.full_stack:
                         break
-                    print('  %s' % (n,))
+                    self.logger.error('  %s' % (n,))
                 raise Exception(reply['error'].get('reason'),)
 
             raise Exception('Unknown API state [%s]' % (reply['state'],))
