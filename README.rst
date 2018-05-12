@@ -12,7 +12,7 @@ Configure
 
 Get your API key from the CDS portal and write it into the configuration file::
 
-    $ vim ~/.cdsapi
+    $ vim ~/.cdsapirc
 
 Test
 ----
@@ -20,5 +20,5 @@ Test
     $ python
     >>> import cdsapi
     >>> cds = cdsapi.Client()
-    >>> cds.get_resource("insitu-glaciers-extent", {})
+    >>> cds.retrieve("insitu-glaciers-extent", {}, "target.data")
     ...
