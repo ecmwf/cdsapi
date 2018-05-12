@@ -13,8 +13,8 @@ c = cdsapi.Client()
 
 c.retrieve("reanalysis-era5-pressure-levels",
            {
-               "variable": "geopotential",
-               "pressure_level": "500",
+               "variable": "temperature",
+               "pressure_level": "1000",
                "product_type": "reanalysis",
                "date": "2008-01-01/2017-12-31",
                "time": "12:00",

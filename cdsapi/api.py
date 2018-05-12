@@ -197,7 +197,7 @@ class Client(object):
                     if n.strip() == '' and not self.full_stack:
                         break
                     self.logger.error('  %s' % (n,))
-                raise Exception(reply['error'].get('reason'),)
+                raise Exception(reply['error'].get('reason'))
 
             raise Exception('Unknown API state [%s]' % (reply['state'],))
 
