@@ -1,7 +1,6 @@
 import requests
 import json
 import time
-import datetime
 import os
 import logging
 
@@ -24,7 +23,12 @@ class Client(object):
                  api_key=os.environ.get('CDSAPI_KEY'),
                  verbose=False,
                  verify=None,
-                 timeout=None, full_stack=False):
+                 timeout=None,
+                 full_stack=False,
+                 delete=False,
+                 retry_max=500,
+                 sleep_max=120
+                 ):
 
         dotrc = os.environ.get('CDSAPI_RC', os.path.expanduser('~/.cdsapirc'))
 
@@ -56,9 +60,10 @@ class Client(object):
         self.verbose = verbose
         self.verify = True if verify else False
         self.timeout = timeout
-        self.sleep_max = 120
+        self.sleep_max = sleep_max
+        self.retry_max = retry_max
         self.full_stack = full_stack
-        self.delete = False
+        self.delete = delete
 
         self.logger.debug("CDSAPI %s" % dict(end_point=self.end_point,
                                              api_key=self.api_key,
@@ -66,7 +71,9 @@ class Client(object):
                                              verify=self.verify,
                                              timeout=self.timeout,
                                              sleep_max=self.sleep_max,
+                                             retry_max=self.retry_max,
                                              full_stack=self.full_stack,
+                                             delete=self.delete
                                              ))
 
     def retrieve(self, name, request, target=None):
@@ -157,7 +164,8 @@ class Client(object):
                         try:
                             delete.raise_for_status()
                         except Exception:
-                            self._warning('DELETE %s returns %s %s' % (task_url, delete.status_code, delete.reason))
+                            self.logger.warning('DELETE %s returns %s %s' %
+                                                (task_url, delete.status_code, delete.reason))
 
                 self.logger.debug('Done')
                 return
@@ -195,8 +203,30 @@ class Client(object):
 
     def robust(self, call):
 
+        def retriable(code, reason):
+
+            if code in [requests.codes.internal_server_error,
+                        requests.codes.bad_gateway,
+                        requests.codes.service_unavailable,
+                        requests.codes.gateway_timeout,
+                        requests.codes.too_many_requests,
+                        requests.codes.request_timeout]:
+                return True
+
+            return False
+
         def wrapped(*args, **kwargs):
-            r = call(*args, **kwargs)
-            return r
+            tries = 0
+            while tries < self.retry_max:
+                r = call(*args, **kwargs)
+                if not retriable(r.status_code, r.reason):
+                    return r
+
+                tries += 1
+
+                self.logger.warning("Recovering from HTTP error [%s %s], attemps %s of %s" % (
+                    r.status_code, r.reason, tries, self.retry_max))
+                self.logger.warning("Retrying in %s second (" % (self.sleep_max))
+                time.sleep(self.sleep_max)
 
         return wrapped
