@@ -1,5 +1,9 @@
 include *.in
 include *.rst
 include *.py
+include LICENSE
+include tox.ini
 recursive-include cdsapi *.py
+recursive-include tests *.in
 recursive-include tests *.py
+recursive-include tests *.txt
