@@ -106,7 +106,7 @@ class Client(object):
         session = requests.Session()
         session.auth = tuple(self.api_key.split(':', 2))
 
-        self.logger.debug("POST %s %s, url", json.dumps(request))
+        self.logger.debug("POST %s, %s", url, json.dumps(request))
         result = self.robust(session.post)(url, json=request, verify=self.verify)
         reply = None
 
