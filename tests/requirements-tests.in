@@ -1,0 +1,7 @@
+pytest
+pytest-flakes
+pytest-cov
+pytest-env
+pytest-mccabe
+pytest-pep8
+pytest-runner
