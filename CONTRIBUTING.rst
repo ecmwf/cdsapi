@@ -6,7 +6,7 @@ How to develop
 
 Install the package following README.rst and then install development dependencies::
 
-    pip install -U -r tests/requirements-dev.txt
+    $ pip install -U -r tests/requirements-dev.txt
 
 Unit tests can be run with `pytest <https://pytest.org>`_ with::
 
