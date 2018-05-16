@@ -39,7 +39,7 @@ setuptools.setup(
     author='ECMWF',
     author_email='software@ecmwf.int',
     license='Apache 2.0',
-    url='https://software.ecmwf.int/stash/projects/CST/repos/cdsapi',
+    url='https://software.ecmwf.int/stash/projects/CDS/repos/cdsapi',
     description="Climate Data Store API",
     long_description=read('README.rst'),
     packages=setuptools.find_packages(),
