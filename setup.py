@@ -30,7 +30,7 @@ def read(fname):
     return io.open(file_path, encoding='utf-8').read()
 
 
-version = '0.0.4.post2'
+version = '0.0.5.dev0'
 
 
 setuptools.setup(
@@ -65,6 +65,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
+        'Programming Language :: Python :: Implementation :: PyPy',
         'Operating System :: OS Independent',
     ],
 )
