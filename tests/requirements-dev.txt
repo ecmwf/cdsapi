@@ -1,0 +1,7 @@
+check-manifest
+detox
+pip-tools
+pyroma
+tox
+tox-pyenv
+zest.releaser
