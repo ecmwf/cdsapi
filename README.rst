@@ -10,11 +10,11 @@ Install via `pip` with::
 Configure
 ---------
 
-Get your UID and API key from the CDS portal at the address https://cds-toolbox-test.bopen.eu/user
+Get your UID and API key from the CDS portal at the address https://cds.climate.copernicus.eu/user
 and write it into the configuration file, so it looks like::
 
     $ cat ~/.cdsapirc
-    url: https://cds-toolbox-test.bopen.eu/api/v2
+    url: https://cds.climate.copernicus.eu/api/v2
     key: <UID>:<API key>
     verify: 0
 
