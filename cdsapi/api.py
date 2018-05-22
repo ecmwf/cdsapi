@@ -48,8 +48,12 @@ class Client(object):
                 config = {}
                 with open(dotrc) as f:
                     for l in f.readlines():
+                      try:
                         k, v = l.strip().split(':', 1)
-                        config[k] = v.strip()
+                        if k in ['url', 'key']:
+                        	config[k] = v.strip()
+                      except:
+                        print('The file ~/.cdsapirc is badly formatted (remove extra lines not required)')
                 url = config.get('url')
                 key = config.get('key')
 
