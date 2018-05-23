@@ -6,11 +6,14 @@
 # granted to it by virtue of its status as an intergovernmental organisation nor
 # does it submit to any jurisdiction.
 
-import requests
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import json
 import time
 import os
 import logging
+
+import requests
 
 
 def bytes_to_string(n):
@@ -45,8 +48,12 @@ class Client(object):
                 config = {}
                 with open(dotrc) as f:
                     for l in f.readlines():
+                      try:
                         k, v = l.strip().split(':', 1)
-                        config[k] = v.strip()
+                        if k in ['url', 'key']:
+                        	config[k] = v.strip()
+                      except:
+                        print('The file ~/.cdsapirc is badly formatted (remove extra lines not required)')
                 url = config.get('url')
                 key = config.get('key')
 

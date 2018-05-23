@@ -16,7 +16,8 @@
 # granted to it by virtue of its status as an intergovernmental organisation nor
 # does it submit to any jurisdiction.
 
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import cdsapi.api
+from . import api
 
-Client = cdsapi.api.Client
+Client = api.Client
