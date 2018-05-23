@@ -9,11 +9,6 @@
 # does it submit to any jurisdiction.
 
 import cdsapi
-import logging
-
-
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(levelname)s %(message)s')
 
 
 c = cdsapi.Client()

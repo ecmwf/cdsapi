@@ -44,6 +44,7 @@ class Client(object):
                  url=os.environ.get('CDSAPI_URL'),
                  key=os.environ.get('CDSAPI_KEY'),
                  quiet=False,
+                 debug=False,
                  verify=None,
                  timeout=None,
                  full_stack=False,
@@ -55,6 +56,16 @@ class Client(object):
                  error_callback=None,
                  debug_callback=None,
                  ):
+
+        if not quiet:
+
+            if debug:
+                level = logging.DEBUG
+            else:
+                level = logging.INFO
+
+            logging.basicConfig(level=level,
+                                format='%(asctime)s %(levelname)s %(message)s')
 
         dotrc = os.environ.get('CDSAPI_RC', os.path.expanduser('~/.cdsapirc'))
 
