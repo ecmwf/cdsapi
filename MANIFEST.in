@@ -1,5 +1,6 @@
 include *.in
 include *.rst
+include *.txt
 include *.py
 include LICENSE
 include tox.ini
