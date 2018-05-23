@@ -213,7 +213,7 @@ class Client(object):
                     if n.strip() == '' and not self.full_stack:
                         break
                     self.logger.error("  %s", n)
-                raise Exception(reply['error'].get('reason'))
+                raise Exception("%s. %s." % (reply['error'].get('message'), reply['error'].get('reason')))
 
             raise Exception('Unknown API state [%s]' % (reply['state'],))
 
@@ -234,14 +234,21 @@ class Client(object):
         def wrapped(*args, **kwargs):
             tries = 0
             while tries < self.retry_max:
-                r = call(*args, **kwargs)
-                if not retriable(r.status_code, r.reason):
-                    return r
+                try:
+                    r = call(*args, **kwargs)
+                except requests.exceptions.ConnectionError as e:
+                    r = None
+                    self.logger.warning("Recovering from connection error [%s], attemps %s of %s",
+                                    e, tries, self.retry_max)
+
+                if r is not None:
+                    if not retriable(r.status_code, r.reason):
+                        return r
+                    self.logger.warning("Recovering from HTTP error [%s %s], attemps %s of %s",
+                                    r.status_code, r.reason, tries, self.retry_max)
 
                 tries += 1
 
-                self.logger.warning("Recovering from HTTP error [%s %s], attemps %s of %s",
-                                    r.status_code, r.reason, tries, self.retry_max)
                 self.logger.warning("Retrying in %s second (", self.sleep_max)
                 time.sleep(self.sleep_max)
 
