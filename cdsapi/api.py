@@ -25,14 +25,25 @@ def bytes_to_string(n):
     return '%g%s' % (int(n * 10 + 0.5) / 10.0, u[i])
 
 
+def read_config(path):
+    config = {}
+    with open(path) as f:
+        for l in f.readlines():
+            if ':' in l:
+                k, v = l.strip().split(':', 1)
+                if k in ('url', 'key', 'verify'):
+                    config[k] = v.strip()
+    return config
+
+
 class Client(object):
 
     logger = logging.getLogger('cdsapi')
 
     def __init__(self,
-                 end_point=os.environ.get('CDSAPI_URL'),
-                 api_key=os.environ.get('CDSAPI_KEY'),
-                 verbose=False,
+                 url=os.environ.get('CDSAPI_URL'),
+                 key=os.environ.get('CDSAPI_KEY'),
+                 quiet=False,
                  verify=None,
                  timeout=None,
                  full_stack=False,
@@ -43,36 +54,26 @@ class Client(object):
 
         dotrc = os.environ.get('CDSAPI_RC', os.path.expanduser('~/.cdsapirc'))
 
-        if end_point is None or api_key is None:
+        if url is None or key is None:
             if os.path.exists(dotrc):
-                config = {}
-                with open(dotrc) as f:
-                    for l in f.readlines():
-                      try:
-                        k, v = l.strip().split(':', 1)
-                        if k in ['url', 'key']:
-                        	config[k] = v.strip()
-                      except:
-                        print('The file ~/.cdsapirc is badly formatted (remove extra lines not required)')
-                url = config.get('url')
-                key = config.get('key')
+                config = read_config(dotrc)
 
-                if api_key is None:
-                    api_key = key
+                if key is None:
+                    key = config.get('key')
 
-                if end_point is None:
-                    end_point = url
+                if url is None:
+                    url = config.get('url')
 
                 if verify is None:
                     verify = int(config.get('verify', 1))
 
-        if end_point is None or api_key is None or api_key is None:
+        if url is None or key is None or key is None:
             raise Exception('Missing/incomplete configuration file: %s' % (dotrc))
 
-        self.end_point = end_point
-        self.api_key = api_key
+        self.url = url
+        self.key = key
 
-        self.verbose = verbose
+        self.quiet = quiet
         self.verify = True if verify else False
         self.timeout = timeout
         self.sleep_max = sleep_max
@@ -80,9 +81,9 @@ class Client(object):
         self.full_stack = full_stack
         self.delete = delete
 
-        self.logger.debug("CDSAPI %s", dict(end_point=self.end_point,
-                                            api_key=self.api_key,
-                                            verbose=self.verbose,
+        self.logger.debug("CDSAPI %s", dict(url=self.url,
+                                            key=self.key,
+                                            quiet=self.quiet,
                                             verify=self.verify,
                                             timeout=self.timeout,
                                             sleep_max=self.sleep_max,
@@ -92,7 +93,7 @@ class Client(object):
                                             ))
 
     def retrieve(self, name, request, target=None):
-        self._api('%s/resources/%s' % (self.end_point, name), request, target)
+        self._api('%s/resources/%s' % (self.url, name), request, target)
 
     def _download(self, url, size, local_filename=None):
 
@@ -119,7 +120,7 @@ class Client(object):
     def _api(self, url, request, target):
 
         session = requests.Session()
-        session.auth = tuple(self.api_key.split(':', 2))
+        session.auth = tuple(self.key.split(':', 2))
 
         self.logger.debug("POST %s, %s", url, json.dumps(request))
         result = self.robust(session.post)(url, json=request, verify=self.verify)
@@ -172,7 +173,7 @@ class Client(object):
                     rid = reply['request_id']
 
                     if self.delete:
-                        task_url = '%s/tasks/%s' % (self.end_point, rid)
+                        task_url = '%s/tasks/%s' % (self.url, rid)
                         self.logger.debug("DELETE %s", task_url)
                         delete = session.delete(task_url, verify=self.verify)
                         self.logger.debug("DELETE returns %s %s", delete.status_code, delete.reason)
@@ -197,7 +198,7 @@ class Client(object):
                 if sleep > self.sleep_max:
                     sleep = self.sleep_max
 
-                task_url = '%s/tasks/%s' % (self.end_point, rid)
+                task_url = '%s/tasks/%s' % (self.url, rid)
                 self.logger.debug("GET %s", task_url)
 
                 result = self.robust(session.get)(task_url, verify=self.verify)
