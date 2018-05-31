@@ -10,11 +10,9 @@
 
 import cdsapi
 
-
 c = cdsapi.Client()
 
-
-c.retrieve("reanalysis-era5-pressure-levels",
+r  = c.retrieve("reanalysis-era5-pressure-levels",
            {
                "variable": "temperature",
                "pressure_level": "250",
@@ -22,5 +20,8 @@ c.retrieve("reanalysis-era5-pressure-levels",
                "date": "2017-12-01/2017-12-31",
                "time": "12:00",
                "format": "grib"
-           },
-           "dowload.grib")
+           })
+
+r.download("dowload.grib")
+print(r)
+r.delete()
