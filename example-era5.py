@@ -23,5 +23,4 @@ r  = c.retrieve("reanalysis-era5-pressure-levels",
            })
 
 r.download("dowload.grib")
-print(r)
-r.delete()
+
