@@ -104,11 +104,6 @@ class Result(object):
                                                                           self.content_type,
                                                                           self.location)
 
-    def __enter__(self):
-
-        r = self.robust(requests.get)(self.location, stream=True, verify=self.verify)
-        r.raise_for_status()
-
     def check(self):
         self.debug("HEAD %s", self.reply['location'])
         metadata = self.robust(self.session.head)(self.reply['location'],
