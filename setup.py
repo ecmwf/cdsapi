@@ -48,7 +48,7 @@ setuptools.setup(
         'pytest-runner',
     ],
     install_requires=[
-        'requests',
+        'requests>=2.5.0',
     ],
     tests_require=[
         'pytest',
