@@ -64,7 +64,8 @@ class Result(object):
         self.info("Downloading %s to %s (%s)", url, target, bytes_to_string(size))
         start = time.time()
 
-        with self.robust(requests.get)(url, stream=True, verify=self.verify) as r:
+        r = self.robust(requests.get)(url, stream=True, verify=self.verify)
+        try:
             r.raise_for_status()
 
             total = 0
@@ -73,6 +74,8 @@ class Result(object):
                     if chunk:
                         f.write(chunk)
                         total += len(chunk)
+        finally:
+            r.close()
 
         assert total == size
 
