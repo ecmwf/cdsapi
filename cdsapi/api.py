@@ -149,6 +149,13 @@ class Client(object):
 
     logger = logging.getLogger('cdsapi')
 
+    def __enter__(self, **kwargs):
+        self.__init__(**kwargs)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
     def __init__(self,
                  url=os.environ.get('CDSAPI_URL'),
                  key=os.environ.get('CDSAPI_KEY'),
