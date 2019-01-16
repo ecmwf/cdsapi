@@ -77,7 +77,8 @@ class Result(object):
         finally:
             r.close()
 
-        assert total == size
+        if total != size:
+            raise Exception("Download failed: downloaded %s byte(s) out of %s" % (total, size))
 
         elapsed = time.time() - start
         if elapsed:
@@ -231,6 +232,9 @@ class Client(object):
             result.download(target)
         return result
 
+    def identity(self):
+        return self._api('%s/resources' % (self.url,), {})
+
     def _api(self, url, request):
 
         session = self.session
@@ -358,7 +362,7 @@ class Client(object):
                     r = call(*args, **kwargs)
                 except requests.exceptions.ConnectionError as e:
                     r = None
-                    self.warning("Recovering from connection error [%s], attemx ps %s of %s",
+                    self.warning("Recovering from connection error [%s], attemps %s of %s",
                                  e, tries, self.retry_max)
 
                 if r is not None:

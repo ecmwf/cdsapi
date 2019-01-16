@@ -10,18 +10,17 @@
 
 import cdsapi
 
-c = cdsapi.Client()
+c = cdsapi.Client(debug=True)
 
 r = c.retrieve(
-    "reanalysis-era5-pressure-levels",
+    "reanalysis-era5-single-levels",
     {
-       "variable": "temperature",
-       "pressure_level": "250",
+       "variable": "2t",
        "product_type": "reanalysis",
-       "date": "2017-12-01/2017-12-31",
-       "time": "12:00",
-       "format": "grib",
+       "date": "2012-12-01",
+       "time": "14:00",
+       "format": "netcdf",
     },
 )
 
-r.download("dowload.grib")
+r.download("test.nc")
