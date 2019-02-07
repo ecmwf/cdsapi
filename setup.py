@@ -37,22 +37,13 @@ setuptools.setup(
     name='cdsapi',
     version=version,
     author='ECMWF',
-    author_email='software@ecmwf.int',
+    author_email='software.support@ecmwf.int',
     license='Apache 2.0',
     url='https://software.ecmwf.int/stash/projects/CDS/repos/cdsapi',
     description="Climate Data Store API",
     long_description=read('README.rst'),
     packages=setuptools.find_packages(),
     include_package_data=True,
-    setup_requires=[
-        'pytest-runner',
-    ],
-    install_requires=[
-        'requests>=2.5.0',
-    ],
-    tests_require=[
-        'pytest',
-    ],
     zip_safe=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
