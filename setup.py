@@ -30,7 +30,7 @@ def read(fname):
     return io.open(file_path, encoding='utf-8').read()
 
 
-version = '0.1.3'
+version = '0.1.4'
 
 
 setuptools.setup(
@@ -44,6 +44,9 @@ setuptools.setup(
     long_description=read('README.rst'),
     packages=setuptools.find_packages(),
     include_package_data=True,
+    install_requires=[
+        'requests>=2.5.0',
+    ],
     zip_safe=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
