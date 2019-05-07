@@ -116,6 +116,14 @@ class Result(object):
         self.debug(metadata.headers)
         return metadata
 
+    def update(self):
+        task_url = '%s/tasks/%s' % (self._url, self.reply['request_id'])
+        self.debug("GET %s", task_url)
+
+        result = self.robust(self.session.get)(task_url, verify=self.verify)
+        result.raise_for_status()
+        self.reply = result.json()
+
     def delete(self):
 
         if self._deleted:
@@ -161,6 +169,7 @@ class Client(object):
                  delete=True,
                  retry_max=500,
                  sleep_max=120,
+                 wait_until_complete=True,
                  info_callback=None,
                  warning_callback=None,
                  error_callback=None,
@@ -206,6 +215,7 @@ class Client(object):
         self.full_stack = full_stack
         self.delete = delete
         self.last_state = None
+        self.wait_until_complete = wait_until_complete
 
         self.debug_callback = debug_callback
         self.warning_callback = warning_callback
@@ -270,6 +280,9 @@ class Client(object):
                 raise Exception(error)
             else:
                 raise
+
+        if not self.wait_until_complete:
+            return Result(self, reply)
 
         sleep = 1
         start = time.time()
