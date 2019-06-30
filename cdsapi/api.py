@@ -360,7 +360,7 @@ class Client(object):
             while tries < self.retry_max:
                 try:
                     r = call(*args, **kwargs)
-                except requests.exceptions.ConnectionError as e:
+                except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
                     r = None
                     self.warning("Recovering from connection error [%s], attemps %s of %s",
                                  e, tries, self.retry_max)
