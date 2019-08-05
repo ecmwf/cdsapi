@@ -12,8 +12,15 @@ import json
 import time
 import os
 import logging
-
+import uuid
 import requests
+
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
+
+from tqdm import tqdm
 
 
 def bytes_to_string(n):
@@ -36,6 +43,24 @@ def read_config(path):
     return config
 
 
+def toJSON(obj):
+
+    to_json = getattr(obj, "toJSON", None)
+    if callable(to_json):
+        return to_json()
+
+    if isinstance(obj, (list, tuple)):
+        return [toJSON(x) for x in obj]
+
+    if isinstance(obj, dict):
+        r = {}
+        for k, v in obj.items():
+            r[k] = toJSON(v)
+        return r
+
+    return obj
+
+
 class Result(object):
 
     def __init__(self, client, reply):
@@ -53,8 +78,20 @@ class Result(object):
         self.info = client.info
         self.warning = client.warning
         self.error = client.error
+        self.sleep_max = client.sleep_max
+        self.retry_max = client.retry_max
+
+        self.timeout = client.timeout
+        self.progress = client.progress
 
         self._deleted = False
+
+    def toJSON(self):
+        r = dict(resultType='url',
+                 contentType=self.content_type,
+                 contentLength=self.content_length,
+                 location=self.location)
+        return r
 
     def _download(self, url, size, target):
 
@@ -64,18 +101,56 @@ class Result(object):
         self.info("Downloading %s to %s (%s)", url, target, bytes_to_string(size))
         start = time.time()
 
-        r = self.robust(requests.get)(url, stream=True, verify=self.verify)
-        try:
-            r.raise_for_status()
+        mode = 'wb'
+        total = 0
+        sleep = 10
+        tries = 0
+        headers = None
 
-            total = 0
-            with open(target, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=1024):
-                    if chunk:
-                        f.write(chunk)
-                        total += len(chunk)
-        finally:
-            r.close()
+        while tries < self.retry_max:
+
+            r = self.robust(requests.get)(url,
+                                          stream=True,
+                                          verify=self.verify,
+                                          headers=headers,
+                                          timeout=self.timeout)
+            try:
+                r.raise_for_status()
+
+                with tqdm(total=size,
+                          unit_scale=True,
+                          unit_divisor=1024,
+                          unit='B',
+                          disable=not self.progress,
+                          leave=False,
+                          ) as pbar:
+                    pbar.update(total)
+                    with open(target, mode) as f:
+                        for chunk in r.iter_content(chunk_size=1024):
+                            if chunk:
+                                f.write(chunk)
+                                total += len(chunk)
+                                pbar.update(len(chunk))
+
+            except requests.exceptions.ConnectionError as e:
+                self.error("Download interupted: %s" % (e,))
+            finally:
+                r.close()
+
+            if total >= size:
+                break
+
+            self.error("Download incomplete, downloaded %s byte(s) out of %s" % (total, size))
+            self.warning("Sleeping %s seconds" % (sleep,))
+            time.sleep(sleep)
+            mode = 'ab'
+            total = os.path.getsize(target)
+            sleep *= 1.5
+            if sleep > self.sleep_max:
+                sleep = self.sleep_max
+            headers = {'Range': 'bytes=%d-' % total}
+            tries += 1
+            self.warning("Resuming download at byte %s" % (total, ))
 
         if total != size:
             raise Exception("Download failed: downloaded %s byte(s) out of %s" % (total, size))
@@ -97,7 +172,7 @@ class Result(object):
 
     @property
     def location(self):
-        return self.reply['location']
+        return urljoin(self._url, self.reply['location'])
 
     @property
     def content_type(self):
@@ -109,9 +184,10 @@ class Result(object):
                                                                           self.location)
 
     def check(self):
-        self.debug("HEAD %s", self.reply['location'])
-        metadata = self.robust(self.session.head)(self.reply['location'],
-                                                  verify=self.verify)
+        self.debug("HEAD %s", self.location)
+        metadata = self.robust(self.session.head)(self.location,
+                                                  verify=self.verify,
+                                                  timeout=self.timeout)
         metadata.raise_for_status()
         self.debug(metadata.headers)
         return metadata
@@ -156,7 +232,8 @@ class Client(object):
                  quiet=False,
                  debug=False,
                  verify=None,
-                 timeout=None,
+                 timeout=60,
+                 progress=True,
                  full_stack=False,
                  delete=True,
                  retry_max=500,
@@ -199,6 +276,8 @@ class Client(object):
         self.key = key
 
         self.quiet = quiet
+        self.progress = progress and not quiet
+
         self.verify = True if verify else False
         self.timeout = timeout
         self.sleep_max = sleep_max
@@ -220,6 +299,7 @@ class Client(object):
                                      quiet=self.quiet,
                                      verify=self.verify,
                                      timeout=self.timeout,
+                                     progress=self.progress,
                                      sleep_max=self.sleep_max,
                                      retry_max=self.retry_max,
                                      full_stack=self.full_stack,
@@ -227,22 +307,44 @@ class Client(object):
                                      ))
 
     def retrieve(self, name, request, target=None):
-        result = self._api('%s/resources/%s' % (self.url, name), request)
+        result = self._api('%s/resources/%s' % (self.url, name), request, 'POST')
         if target is not None:
             result.download(target)
         return result
 
+    def service(self, name, *args, **kwargs):
+        self.delete = False  # Don't delete results
+        name = '/'.join(name.split('.'))
+        request = toJSON(dict(args=args, kwargs=kwargs))
+        result = self._api('%s/tasks/services/%s/clientid-%s' % (self.url, name, uuid.uuid4().hex), request, 'PUT')
+        return result
+
+    def workflow(self, code, *args, **kwargs):
+        params = dict(code=code,
+                      args=args,
+                      kwargs=kwargs,
+                      workflow_name='application')
+        return self.service("tool.toolbox.orchestrator.run_workflow", params)
+
     def identity(self):
         return self._api('%s/resources' % (self.url,), {})
 
-    def _api(self, url, request):
+    def _api(self, url, request, method):
 
         session = self.session
 
         self.info("Sending request to %s", url)
-        self.debug("POST %s %s", url, json.dumps(request))
+        self.debug("%s %s %s", method, url, json.dumps(request))
 
-        result = self.robust(session.post)(url, json=request, verify=self.verify)
+        if method == 'PUT':
+            action = session.put
+        else:
+            action = session.post
+
+        result = self.robust(action)(url,
+                                     json=request,
+                                     verify=self.verify,
+                                     timeout=self.timeout)
         reply = None
 
         try:
@@ -272,7 +374,6 @@ class Client(object):
                 raise
 
         sleep = 1
-        start = time.time()
 
         while True:
 
@@ -284,13 +385,14 @@ class Client(object):
 
             if reply['state'] == 'completed':
                 self.debug("Done")
+
+                if 'result' in reply:
+                    return reply['result']
+
                 return Result(self, reply)
 
             if reply['state'] in ('queued', 'running'):
                 rid = reply['request_id']
-
-                if self.timeout and (time.time() - start > self.timeout):
-                    raise Exception('TIMEOUT')
 
                 self.debug("Request ID is %s, sleep %s", rid, sleep)
                 time.sleep(sleep)
@@ -301,7 +403,9 @@ class Client(object):
                 task_url = '%s/tasks/%s' % (self.url, rid)
                 self.debug("GET %s", task_url)
 
-                result = self.robust(session.get)(task_url, verify=self.verify)
+                result = self.robust(session.get)(task_url,
+                                                  verify=self.verify,
+                                                  timeout=self.timeout)
                 result.raise_for_status()
                 reply = result.json()
                 continue
@@ -341,6 +445,52 @@ class Client(object):
         else:
             self.logger.debug(*args, **kwargs)
 
+    def _download(self, results, targets=None):
+
+        if isinstance(results, Result):
+            if targets:
+                path = targets.pop(0)
+            else:
+                path = None
+            return results.download(path)
+
+        if isinstance(results, (list, tuple)):
+            return [self._download(x, targets) for x in results]
+
+        if isinstance(results, dict):
+
+            if 'location' in results and 'contentLength' in results:
+                reply = dict(location=results['location'],
+                             content_length=results['contentLength'],
+                             content_type=results.get('contentType'))
+
+                if targets:
+                    path = targets.pop(0)
+                else:
+                    path = None
+
+                return Result(self, reply).download(path)
+
+            r = {}
+            for k, v in results.items():
+                r[v] = self._download(v, targets)
+            return r
+
+        return results
+
+    def download(self, results, targets=None):
+        if targets:
+            # Make a copy
+            targets = [t for t in targets]
+        return self._download(results, targets)
+
+    def remote(self, url):
+        r = requests.head(url)
+        reply = dict(location=url,
+                     content_length=r.headers['Content-Length'],
+                     content_type=r.headers['Content-Type'])
+        return Result(self, reply)
+
     def robust(self, call):
 
         def retriable(code, reason):
@@ -375,5 +525,6 @@ class Client(object):
 
                 self.warning("Retrying in %s seconds", self.sleep_max)
                 time.sleep(self.sleep_max)
+                self.info("Retrying now...")
 
         return wrapped

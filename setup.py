@@ -30,7 +30,7 @@ def read(fname):
     return io.open(file_path, encoding='utf-8').read()
 
 
-version = '0.1.4'
+version = '0.2.3'
 
 
 setuptools.setup(
@@ -46,6 +46,7 @@ setuptools.setup(
     include_package_data=True,
     install_requires=[
         'requests>=2.5.0',
+        'tqdm',
     ],
     zip_safe=True,
     classifiers=[

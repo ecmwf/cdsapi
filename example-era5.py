@@ -10,7 +10,7 @@
 
 import cdsapi
 
-c = cdsapi.Client(debug=True)
+c = cdsapi.Client()
 
 r = c.retrieve(
     "reanalysis-era5-single-levels",
