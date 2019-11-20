@@ -518,6 +518,10 @@ class Client(object):
                 if r is not None:
                     if not retriable(r.status_code, r.reason):
                         return r
+                    try:
+                        self.warning(r.json()['reason'])
+                    except Exception:
+                        pass
                     self.warning("Recovering from HTTP error [%s %s], attemps %s of %s",
                                  r.status_code, r.reason, tries, self.retry_max)
 
