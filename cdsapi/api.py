@@ -326,10 +326,34 @@ class Client(object):
                       workflow_name='application')
         return self.service("tool.toolbox.orchestrator.run_workflow", params)
 
-    def identity(self):
-        return self._api('%s/resources' % (self.url,), {})
+    def status(self, context=None):
+        url = '%s/status.json' % (self.url,)
+        r = requests.get(url, verify=self.verify)
+        r.raise_for_status()
+        return r.json()
+
+    def _status(self, url):
+        try:
+            status = self.status(url)
+
+            info = status.get('info', [])
+            if not isinstance(info, list):
+                info = [info]
+            for i in info:
+                self.info("%s", i)
+
+            warning = status.get('warning', [])
+            if not isinstance(warning, list):
+                warning = [warning]
+            for w in warning:
+                self.warning("%s", w)
+
+        except Exception:
+            pass
 
     def _api(self, url, request, method):
+
+        self._status(url)
 
         session = self.session
 
