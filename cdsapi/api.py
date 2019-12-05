@@ -116,8 +116,10 @@ class Result(object):
         self.debug(metadata.headers)
         return metadata
 
-    def update(self):
-        task_url = '%s/tasks/%s' % (self._url, self.reply['request_id'])
+    def update(self, request_id=None):
+        if request_id is None:
+            request_id = self.reply['request_id']
+        task_url = '%s/tasks/%s' % (self._url, request_id)
         self.debug("GET %s", task_url)
 
         result = self.robust(self.session.get)(task_url, verify=self.verify)
