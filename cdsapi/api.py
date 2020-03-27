@@ -242,6 +242,7 @@ class Client(object):
                  warning_callback=None,
                  error_callback=None,
                  debug_callback=None,
+                 metadata=None,
                  ):
 
         if not quiet:
@@ -294,6 +295,8 @@ class Client(object):
         self.session = requests.Session()
         self.session.auth = tuple(self.key.split(':', 2))
 
+        self.metadata = metadata
+
         self.debug("CDSAPI %s", dict(url=self.url,
                                      key=self.key,
                                      quiet=self.quiet,
@@ -303,7 +306,8 @@ class Client(object):
                                      sleep_max=self.sleep_max,
                                      retry_max=self.retry_max,
                                      full_stack=self.full_stack,
-                                     delete=self.delete
+                                     delete=self.delete,
+                                     metadata=self.metadata,
                                      ))
 
     def retrieve(self, name, request, target=None):
@@ -315,7 +319,10 @@ class Client(object):
     def service(self, name, *args, **kwargs):
         self.delete = False  # Don't delete results
         name = '/'.join(name.split('.'))
-        request = toJSON(dict(args=args, kwargs=kwargs))
+        request = dict(args=args, kwargs=kwargs)
+        if self.metadata:
+            request['_cds_metadata'] = self.metadata
+        request = toJSON(request)
         result = self._api('%s/tasks/services/%s/clientid-%s' % (self.url, name, uuid.uuid4().hex), request, 'PUT')
         return result
 
