@@ -6,3 +6,4 @@
 *.tar.gz
 *.grib
 *.nc
+cdsapi.egg-info

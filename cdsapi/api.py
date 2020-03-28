@@ -243,6 +243,7 @@ class Client(object):
                  error_callback=None,
                  debug_callback=None,
                  metadata=None,
+                 forget=False,
                  ):
 
         if not quiet:
@@ -296,6 +297,7 @@ class Client(object):
         self.session.auth = tuple(self.key.split(':', 2))
 
         self.metadata = metadata
+        self.forget = forget
 
         self.debug("CDSAPI %s", dict(url=self.url,
                                      key=self.key,
@@ -308,6 +310,7 @@ class Client(object):
                                      full_stack=self.full_stack,
                                      delete=self.delete,
                                      metadata=self.metadata,
+                                     forget=self.forget,
                                      ))
 
     def retrieve(self, name, request, target=None):
@@ -376,6 +379,10 @@ class Client(object):
                                      json=request,
                                      verify=self.verify,
                                      timeout=self.timeout)
+
+        if self.forget:
+            return result
+
         reply = None
 
         try:
