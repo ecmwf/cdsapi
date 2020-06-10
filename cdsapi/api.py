@@ -329,11 +329,11 @@ class Client(object):
         result = self._api('%s/tasks/services/%s/clientid-%s' % (self.url, name, uuid.uuid4().hex), request, 'PUT')
         return result
 
-    def workflow(self, code, *args, **kwargs):
+    def workflow(self, code, *args,  workflow_name='application', **kwargs):
         params = dict(code=code,
                       args=args,
                       kwargs=kwargs,
-                      workflow_name='application')
+                      workflow_name=workflow_name)
         return self.service("tool.toolbox.orchestrator.run_workflow", params)
 
     def status(self, context=None):
