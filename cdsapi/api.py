@@ -341,7 +341,8 @@ class Client(object):
         result = self._api('%s/tasks/services/%s/clientid-%s' % (self.url, name, uuid.uuid4().hex), request, 'PUT')
         return result
 
-    def workflow(self, code, *args,  workflow_name='application', **kwargs):
+    def workflow(self, code, *args, **kwargs):
+        workflow_name=kwargs.pop('workflow_name', 'application')
         params = dict(code=code,
                       args=args,
                       kwargs=kwargs,
