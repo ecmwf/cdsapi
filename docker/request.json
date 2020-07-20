@@ -1,6 +1,6 @@
 {
   "url": "https://cds.climate.copernicus.eu/api/v2",
-  "uuid": "51446",
+  "uuid": "< YOUR USER ID >",
   "key": "< YOUR API KEY >",
   "variable": "reanalysis-era5-pressure-levels",
   "options": {
