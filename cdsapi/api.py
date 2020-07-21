@@ -109,7 +109,7 @@ class Result(object):
 
         while tries < self.retry_max:
 
-            r = self.robust(requests.get)(url,
+            r = self.robust(self.session.get)(url,
                                           stream=True,
                                           verify=self.verify,
                                           headers=headers,
@@ -255,6 +255,7 @@ class Client(object):
                  debug_callback=None,
                  metadata=None,
                  forget=False,
+                 session=requests.Session()
                  ):
 
         if not quiet:
@@ -305,7 +306,7 @@ class Client(object):
         self.info_callback = info_callback
         self.error_callback = error_callback
 
-        self.session = requests.Session()
+        self.session = session
         self.session.auth = tuple(self.key.split(':', 2))
 
         self.metadata = metadata
@@ -351,7 +352,7 @@ class Client(object):
 
     def status(self, context=None):
         url = '%s/status.json' % (self.url,)
-        r = requests.get(url, verify=self.verify)
+        r = self.session.get(url, verify=self.verify)
         r.raise_for_status()
         return r.json()
 
