@@ -332,10 +332,16 @@ class Client(object):
             result.download(target)
         return result
 
-    def service(self, name, *args, **kwargs):
+    def service(self, name, *args, mimic_ui=False, **kwargs):
         self.delete = False  # Don't delete results
         name = '/'.join(name.split('.'))
         request = dict(args=args, kwargs=kwargs)
+        # To mimic the CDS ui the args must included directly at the top level of the request
+        # This is applicable to preloading application workflows 
+        if mimic_ui:
+            request.update(request['args'][0])
+            del request['args']
+
         if self.metadata:
             request['_cds_metadata'] = self.metadata
         request = toJSON(request)
