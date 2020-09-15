@@ -332,10 +332,15 @@ class Client(object):
             result.download(target)
         return result
 
-    def service(self, name, *args, **kwargs):
+    def service(self, name, *args, mimic_ui=False, **kwargs):
         self.delete = False  # Don't delete results
         name = '/'.join(name.split('.'))
-        request = dict(args=args, kwargs=kwargs)
+        # To mimic the CDS ui the request should be populated directly with the kwargs
+        if mimic_ui:
+            request = kwargs
+        else:
+            request = dict(args=args, kwargs=kwargs)
+
         if self.metadata:
             request['_cds_metadata'] = self.metadata
         request = toJSON(request)
