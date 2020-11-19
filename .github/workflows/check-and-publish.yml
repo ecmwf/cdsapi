@@ -34,7 +34,7 @@ jobs:
       - name: Tokens
         shell: python
         env:
-          ECMWFAPIRC: ${{ secrets.CDSAPIRC }}
+          CDSAPIRC: ${{ secrets.CDSAPIRC }}
 
         run: |
           import os
