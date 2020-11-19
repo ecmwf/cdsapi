@@ -37,7 +37,7 @@ jobs:
           CDSAPIRC: ${{ secrets.CDSAPIRC }}
 
         run: |
-          from __future__ import print
+          from __future__ import print_function
           import os
           for n in ('CDSAPIRC',):
               m = os.path.expanduser("~/." + n.lower())
