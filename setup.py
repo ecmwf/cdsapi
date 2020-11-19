@@ -27,40 +27,40 @@ import setuptools
 
 def read(fname):
     file_path = os.path.join(os.path.dirname(__file__), fname)
-    return io.open(file_path, encoding='utf-8').read()
+    return io.open(file_path, encoding="utf-8").read()
 
 
-version = '0.3.1'
+version = "0.3.1"
 
 
 setuptools.setup(
-    name='cdsapi',
+    name="cdsapi",
     version=version,
-    author='ECMWF',
-    author_email='software.support@ecmwf.int',
-    license='Apache 2.0',
-    url='https://software.ecmwf.int/stash/projects/CDS/repos/cdsapi',
+    author="ECMWF",
+    author_email="software.support@ecmwf.int",
+    license="Apache 2.0",
+    url="https://software.ecmwf.int/stash/projects/CDS/repos/cdsapi",
     description="Climate Data Store API",
-    long_description=read('README.rst'),
+    long_description=read("README.rst"),
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
-        'requests>=2.5.0',
-        'tqdm',
+        "requests>=2.5.0",
+        "tqdm",
     ],
     zip_safe=True,
     classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Operating System :: OS Independent',
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: Implementation :: CPython",
+        "Programming Language :: Python :: Implementation :: PyPy",
+        "Operating System :: OS Independent",
     ],
 )

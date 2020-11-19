@@ -24,21 +24,21 @@ from tqdm import tqdm
 
 
 def bytes_to_string(n):
-    u = ['', 'K', 'M', 'G', 'T', 'P']
+    u = ["", "K", "M", "G", "T", "P"]
     i = 0
     while n >= 1024:
         n /= 1024.0
         i += 1
-    return '%g%s' % (int(n * 10 + 0.5) / 10.0, u[i])
+    return "%g%s" % (int(n * 10 + 0.5) / 10.0, u[i])
 
 
 def read_config(path):
     config = {}
     with open(path) as f:
         for l in f.readlines():
-            if ':' in l:
-                k, v = l.strip().split(':', 1)
-                if k in ('url', 'key', 'verify'):
+            if ":" in l:
+                k, v = l.strip().split(":", 1)
+                if k in ("url", "key", "verify"):
                     config[k] = v.strip()
     return config
 
@@ -62,7 +62,6 @@ def toJSON(obj):
 
 
 class Result(object):
-
     def __init__(self, client, reply):
 
         self.reply = reply
@@ -87,21 +86,23 @@ class Result(object):
         self._deleted = False
 
     def toJSON(self):
-        r = dict(resultType='url',
-                 contentType=self.content_type,
-                 contentLength=self.content_length,
-                 location=self.location)
+        r = dict(
+            resultType="url",
+            contentType=self.content_type,
+            contentLength=self.content_length,
+            location=self.location,
+        )
         return r
 
     def _download(self, url, size, target):
 
         if target is None:
-            target = url.split('/')[-1]
+            target = url.split("/")[-1]
 
         self.info("Downloading %s to %s (%s)", url, target, bytes_to_string(size))
         start = time.time()
 
-        mode = 'wb'
+        mode = "wb"
         total = 0
         sleep = 10
         tries = 0
@@ -109,21 +110,24 @@ class Result(object):
 
         while tries < self.retry_max:
 
-            r = self.robust(self.session.get)(url,
-                                          stream=True,
-                                          verify=self.verify,
-                                          headers=headers,
-                                          timeout=self.timeout)
+            r = self.robust(self.session.get)(
+                url,
+                stream=True,
+                verify=self.verify,
+                headers=headers,
+                timeout=self.timeout,
+            )
             try:
                 r.raise_for_status()
 
-                with tqdm(total=size,
-                          unit_scale=True,
-                          unit_divisor=1024,
-                          unit='B',
-                          disable=not self.progress,
-                          leave=False,
-                          ) as pbar:
+                with tqdm(
+                    total=size,
+                    unit_scale=True,
+                    unit_divisor=1024,
+                    unit="B",
+                    disable=not self.progress,
+                    leave=False,
+                ) as pbar:
                     pbar.update(total)
                     with open(target, mode) as f:
                         for chunk in r.iter_content(chunk_size=1024):
@@ -140,20 +144,24 @@ class Result(object):
             if total >= size:
                 break
 
-            self.error("Download incomplete, downloaded %s byte(s) out of %s" % (total, size))
+            self.error(
+                "Download incomplete, downloaded %s byte(s) out of %s" % (total, size)
+            )
             self.warning("Sleeping %s seconds" % (sleep,))
             time.sleep(sleep)
-            mode = 'ab'
+            mode = "ab"
             total = os.path.getsize(target)
             sleep *= 1.5
             if sleep > self.sleep_max:
                 sleep = self.sleep_max
-            headers = {'Range': 'bytes=%d-' % total}
+            headers = {"Range": "bytes=%d-" % total}
             tries += 1
-            self.warning("Resuming download at byte %s" % (total, ))
+            self.warning("Resuming download at byte %s" % (total,))
 
         if total != size:
-            raise Exception("Download failed: downloaded %s byte(s) out of %s" % (total, size))
+            raise Exception(
+                "Download failed: downloaded %s byte(s) out of %s" % (total, size)
+            )
 
         elapsed = time.time() - start
         if elapsed:
@@ -162,40 +170,40 @@ class Result(object):
         return target
 
     def download(self, target=None):
-        return self._download(self.location,
-                              self.content_length,
-                              target)
+        return self._download(self.location, self.content_length, target)
 
     @property
     def content_length(self):
-        return int(self.reply['content_length'])
+        return int(self.reply["content_length"])
 
     @property
     def location(self):
-        return urljoin(self._url, self.reply['location'])
+        return urljoin(self._url, self.reply["location"])
 
     @property
     def content_type(self):
-        return self.reply['content_type']
+        return self.reply["content_type"]
 
     def __repr__(self):
-        return "Result(content_length=%s,content_type=%s,location=%s)" % (self.content_length,
-                                                                          self.content_type,
-                                                                          self.location)
+        return "Result(content_length=%s,content_type=%s,location=%s)" % (
+            self.content_length,
+            self.content_type,
+            self.location,
+        )
 
     def check(self):
         self.debug("HEAD %s", self.location)
-        metadata = self.robust(self.session.head)(self.location,
-                                                  verify=self.verify,
-                                                  timeout=self.timeout)
+        metadata = self.robust(self.session.head)(
+            self.location, verify=self.verify, timeout=self.timeout
+        )
         metadata.raise_for_status()
         self.debug(metadata.headers)
         return metadata
 
     def update(self, request_id=None):
         if request_id is None:
-            request_id = self.reply['request_id']
-        task_url = '%s/tasks/%s' % (self._url, request_id)
+            request_id = self.reply["request_id"]
+        task_url = "%s/tasks/%s" % (self._url, request_id)
         self.debug("GET %s", task_url)
 
         result = self.robust(self.session.get)(task_url, verify=self.verify)
@@ -207,10 +215,10 @@ class Result(object):
         if self._deleted:
             return
 
-        if 'request_id' in self.reply:
-            rid = self.reply['request_id']
+        if "request_id" in self.reply:
+            rid = self.reply["request_id"]
 
-            task_url = '%s/tasks/%s' % (self._url, rid)
+            task_url = "%s/tasks/%s" % (self._url, rid)
             self.debug("DELETE %s", task_url)
 
             delete = self.session.delete(task_url, verify=self.verify)
@@ -219,8 +227,12 @@ class Result(object):
             try:
                 delete.raise_for_status()
             except Exception:
-                self.warning("DELETE %s returns %s %s",
-                             task_url, delete.status_code, delete.reason)
+                self.warning(
+                    "DELETE %s returns %s %s",
+                    task_url,
+                    delete.status_code,
+                    delete.reason,
+                )
 
             self._deleted = True
 
@@ -234,29 +246,30 @@ class Result(object):
 
 class Client(object):
 
-    logger = logging.getLogger('cdsapi')
+    logger = logging.getLogger("cdsapi")
 
-    def __init__(self,
-                 url=os.environ.get('CDSAPI_URL'),
-                 key=os.environ.get('CDSAPI_KEY'),
-                 quiet=False,
-                 debug=False,
-                 verify=None,
-                 timeout=60,
-                 progress=True,
-                 full_stack=False,
-                 delete=True,
-                 retry_max=500,
-                 sleep_max=120,
-                 wait_until_complete=True,
-                 info_callback=None,
-                 warning_callback=None,
-                 error_callback=None,
-                 debug_callback=None,
-                 metadata=None,
-                 forget=False,
-                 session=requests.Session()
-                 ):
+    def __init__(
+        self,
+        url=os.environ.get("CDSAPI_URL"),
+        key=os.environ.get("CDSAPI_KEY"),
+        quiet=False,
+        debug=False,
+        verify=None,
+        timeout=60,
+        progress=True,
+        full_stack=False,
+        delete=True,
+        retry_max=500,
+        sleep_max=120,
+        wait_until_complete=True,
+        info_callback=None,
+        warning_callback=None,
+        error_callback=None,
+        debug_callback=None,
+        metadata=None,
+        forget=False,
+        session=requests.Session(),
+    ):
 
         if not quiet:
 
@@ -265,26 +278,27 @@ class Client(object):
             else:
                 level = logging.INFO
 
-            logging.basicConfig(level=level,
-                                format='%(asctime)s %(levelname)s %(message)s')
+            logging.basicConfig(
+                level=level, format="%(asctime)s %(levelname)s %(message)s"
+            )
 
-        dotrc = os.environ.get('CDSAPI_RC', os.path.expanduser('~/.cdsapirc'))
+        dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
 
         if url is None or key is None:
             if os.path.exists(dotrc):
                 config = read_config(dotrc)
 
                 if key is None:
-                    key = config.get('key')
+                    key = config.get("key")
 
                 if url is None:
-                    url = config.get('url')
+                    url = config.get("url")
 
                 if verify is None:
-                    verify = int(config.get('verify', 1))
+                    verify = int(config.get("verify", 1))
 
         if url is None or key is None or key is None:
-            raise Exception('Missing/incomplete configuration file: %s' % (dotrc))
+            raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
 
         self.url = url
         self.key = key
@@ -307,34 +321,38 @@ class Client(object):
         self.error_callback = error_callback
 
         self.session = session
-        self.session.auth = tuple(self.key.split(':', 2))
+        self.session.auth = tuple(self.key.split(":", 2))
 
         self.metadata = metadata
         self.forget = forget
 
-        self.debug("CDSAPI %s", dict(url=self.url,
-                                     key=self.key,
-                                     quiet=self.quiet,
-                                     verify=self.verify,
-                                     timeout=self.timeout,
-                                     progress=self.progress,
-                                     sleep_max=self.sleep_max,
-                                     retry_max=self.retry_max,
-                                     full_stack=self.full_stack,
-                                     delete=self.delete,
-                                     metadata=self.metadata,
-                                     forget=self.forget,
-                                     ))
+        self.debug(
+            "CDSAPI %s",
+            dict(
+                url=self.url,
+                key=self.key,
+                quiet=self.quiet,
+                verify=self.verify,
+                timeout=self.timeout,
+                progress=self.progress,
+                sleep_max=self.sleep_max,
+                retry_max=self.retry_max,
+                full_stack=self.full_stack,
+                delete=self.delete,
+                metadata=self.metadata,
+                forget=self.forget,
+            ),
+        )
 
     def retrieve(self, name, request, target=None):
-        result = self._api('%s/resources/%s' % (self.url, name), request, 'POST')
+        result = self._api("%s/resources/%s" % (self.url, name), request, "POST")
         if target is not None:
             result.download(target)
         return result
 
     def service(self, name, *args, mimic_ui=False, **kwargs):
         self.delete = False  # Don't delete results
-        name = '/'.join(name.split('.'))
+        name = "/".join(name.split("."))
         # To mimic the CDS ui the request should be populated directly with the kwargs
         if mimic_ui:
             request = kwargs
@@ -342,21 +360,22 @@ class Client(object):
             request = dict(args=args, kwargs=kwargs)
 
         if self.metadata:
-            request['_cds_metadata'] = self.metadata
+            request["_cds_metadata"] = self.metadata
         request = toJSON(request)
-        result = self._api('%s/tasks/services/%s/clientid-%s' % (self.url, name, uuid.uuid4().hex), request, 'PUT')
+        result = self._api(
+            "%s/tasks/services/%s/clientid-%s" % (self.url, name, uuid.uuid4().hex),
+            request,
+            "PUT",
+        )
         return result
 
     def workflow(self, code, *args, **kwargs):
-        workflow_name=kwargs.pop('workflow_name', 'application')
-        params = dict(code=code,
-                      args=args,
-                      kwargs=kwargs,
-                      workflow_name=workflow_name)
+        workflow_name = kwargs.pop("workflow_name", "application")
+        params = dict(code=code, args=args, kwargs=kwargs, workflow_name=workflow_name)
         return self.service("tool.toolbox.orchestrator.run_workflow", params)
 
     def status(self, context=None):
-        url = '%s/status.json' % (self.url,)
+        url = "%s/status.json" % (self.url,)
         r = self.session.get(url, verify=self.verify)
         r.raise_for_status()
         return r.json()
@@ -365,13 +384,13 @@ class Client(object):
         try:
             status = self.status(url)
 
-            info = status.get('info', [])
+            info = status.get("info", [])
             if not isinstance(info, list):
                 info = [info]
             for i in info:
                 self.info("%s", i)
 
-            warning = status.get('warning', [])
+            warning = status.get("warning", [])
             if not isinstance(warning, list):
                 warning = [warning]
             for w in warning:
@@ -389,15 +408,14 @@ class Client(object):
         self.info("Sending request to %s", url)
         self.debug("%s %s %s", method, url, json.dumps(request))
 
-        if method == 'PUT':
+        if method == "PUT":
             action = session.put
         else:
             action = session.post
 
-        result = self.robust(action)(url,
-                                     json=request,
-                                     verify=self.verify,
-                                     timeout=self.timeout)
+        result = self.robust(action)(
+            url, json=request, verify=self.verify, timeout=self.timeout
+        )
 
         if self.forget:
             return result
@@ -417,15 +435,17 @@ class Client(object):
 
             self.debug(json.dumps(reply))
 
-            if 'message' in reply:
-                error = reply['message']
+            if "message" in reply:
+                error = reply["message"]
 
-                if 'context' in reply and 'required_terms' in reply['context']:
+                if "context" in reply and "required_terms" in reply["context"]:
                     e = [error]
-                    for t in reply['context']['required_terms']:
-                        e.append("To access this resource, you first need to accept the terms"
-                                 "of '%s' at %s" % (t['title'], t['url']))
-                    error = '. '.join(e)
+                    for t in reply["context"]["required_terms"]:
+                        e.append(
+                            "To access this resource, you first need to accept the terms"
+                            "of '%s' at %s" % (t["title"], t["url"])
+                        )
+                    error = ". ".join(e)
                 raise Exception(error)
             else:
                 raise
@@ -439,20 +459,20 @@ class Client(object):
 
             self.debug("REPLY %s", reply)
 
-            if reply['state'] != self.last_state:
-                self.info("Request is %s" % (reply['state'],))
-                self.last_state = reply['state']
+            if reply["state"] != self.last_state:
+                self.info("Request is %s" % (reply["state"],))
+                self.last_state = reply["state"]
 
-            if reply['state'] == 'completed':
+            if reply["state"] == "completed":
                 self.debug("Done")
 
-                if 'result' in reply:
-                    return reply['result']
+                if "result" in reply:
+                    return reply["result"]
 
                 return Result(self, reply)
 
-            if reply['state'] in ('queued', 'running'):
-                rid = reply['request_id']
+            if reply["state"] in ("queued", "running"):
+                rid = reply["request_id"]
 
                 self.debug("Request ID is %s, sleep %s", rid, sleep)
                 time.sleep(sleep)
@@ -460,26 +480,34 @@ class Client(object):
                 if sleep > self.sleep_max:
                     sleep = self.sleep_max
 
-                task_url = '%s/tasks/%s' % (self.url, rid)
+                task_url = "%s/tasks/%s" % (self.url, rid)
                 self.debug("GET %s", task_url)
 
-                result = self.robust(session.get)(task_url,
-                                                  verify=self.verify,
-                                                  timeout=self.timeout)
+                result = self.robust(session.get)(
+                    task_url, verify=self.verify, timeout=self.timeout
+                )
                 result.raise_for_status()
                 reply = result.json()
                 continue
 
-            if reply['state'] in ('failed',):
-                self.error("Message: %s", reply['error'].get('message'))
-                self.error("Reason:  %s", reply['error'].get('reason'))
-                for n in reply.get('error', {}).get('context', {}).get('traceback', '').split('\n'):
-                    if n.strip() == '' and not self.full_stack:
+            if reply["state"] in ("failed",):
+                self.error("Message: %s", reply["error"].get("message"))
+                self.error("Reason:  %s", reply["error"].get("reason"))
+                for n in (
+                    reply.get("error", {})
+                    .get("context", {})
+                    .get("traceback", "")
+                    .split("\n")
+                ):
+                    if n.strip() == "" and not self.full_stack:
                         break
                     self.error("  %s", n)
-                raise Exception("%s. %s." % (reply['error'].get('message'), reply['error'].get('reason')))
+                raise Exception(
+                    "%s. %s."
+                    % (reply["error"].get("message"), reply["error"].get("reason"))
+                )
 
-            raise Exception('Unknown API state [%s]' % (reply['state'],))
+            raise Exception("Unknown API state [%s]" % (reply["state"],))
 
     def info(self, *args, **kwargs):
         if self.info_callback:
@@ -519,10 +547,12 @@ class Client(object):
 
         if isinstance(results, dict):
 
-            if 'location' in results and 'contentLength' in results:
-                reply = dict(location=results['location'],
-                             content_length=results['contentLength'],
-                             content_type=results.get('contentType'))
+            if "location" in results and "contentLength" in results:
+                reply = dict(
+                    location=results["location"],
+                    content_length=results["contentLength"],
+                    content_type=results.get("contentType"),
+                )
 
                 if targets:
                     path = targets.pop(0)
@@ -546,21 +576,24 @@ class Client(object):
 
     def remote(self, url):
         r = requests.head(url)
-        reply = dict(location=url,
-                     content_length=r.headers['Content-Length'],
-                     content_type=r.headers['Content-Type'])
+        reply = dict(
+            location=url,
+            content_length=r.headers["Content-Length"],
+            content_type=r.headers["Content-Type"],
+        )
         return Result(self, reply)
 
     def robust(self, call):
-
         def retriable(code, reason):
 
-            if code in [requests.codes.internal_server_error,
-                        requests.codes.bad_gateway,
-                        requests.codes.service_unavailable,
-                        requests.codes.gateway_timeout,
-                        requests.codes.too_many_requests,
-                        requests.codes.request_timeout]:
+            if code in [
+                requests.codes.internal_server_error,
+                requests.codes.bad_gateway,
+                requests.codes.service_unavailable,
+                requests.codes.gateway_timeout,
+                requests.codes.too_many_requests,
+                requests.codes.request_timeout,
+            ]:
                 return True
 
             return False
@@ -570,20 +603,32 @@ class Client(object):
             while tries < self.retry_max:
                 try:
                     r = call(*args, **kwargs)
-                except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout) as e:
+                except (
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.ReadTimeout,
+                ) as e:
                     r = None
-                    self.warning("Recovering from connection error [%s], attemps %s of %s",
-                                 e, tries, self.retry_max)
+                    self.warning(
+                        "Recovering from connection error [%s], attemps %s of %s",
+                        e,
+                        tries,
+                        self.retry_max,
+                    )
 
                 if r is not None:
                     if not retriable(r.status_code, r.reason):
                         return r
                     try:
-                        self.warning(r.json()['reason'])
+                        self.warning(r.json()["reason"])
                     except Exception:
                         pass
-                    self.warning("Recovering from HTTP error [%s %s], attemps %s of %s",
-                                 r.status_code, r.reason, tries, self.retry_max)
+                    self.warning(
+                        "Recovering from HTTP error [%s %s], attemps %s of %s",
+                        r.status_code,
+                        r.reason,
+                        tries,
+                        self.retry_max,
+                    )
 
                 tries += 1
 
