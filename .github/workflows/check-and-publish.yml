@@ -50,6 +50,8 @@ jobs:
           pip install pytest
           pytest
 
+      - run: ls -l
+
   deploy:
 
     if: ${{ github.event_name == 'release' }}
