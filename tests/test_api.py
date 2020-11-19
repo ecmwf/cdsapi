@@ -1,7 +1,5 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import cdsapi
-
+import os
 
 def test_request():
 
@@ -18,3 +16,5 @@ def test_request():
     )
 
     r.download("test.grib")
+
+    assert os.path.getsize("test.grib") == 2076600
