@@ -350,7 +350,7 @@ class Client(object):
             result.download(target)
         return result
 
-    def service(self, name, *args, mimic_ui=False, **kwargs):
+    def service(self, name, mimic_ui=False, *args, **kwargs):
         self.delete = False  # Don't delete results
         name = "/".join(name.split("."))
         # To mimic the CDS ui the request should be populated directly with the kwargs
