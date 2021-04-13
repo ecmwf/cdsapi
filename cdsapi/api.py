@@ -295,7 +295,7 @@ class Client(object):
                     url = config.get("url")
 
                 if verify is None:
-                    verify = int(config.get("verify", 1))
+                    verify = bool(int(config.get("verify", 1)))
 
         if url is None or key is None or key is None:
             raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
@@ -306,7 +306,7 @@ class Client(object):
         self.quiet = quiet
         self.progress = progress and not quiet
 
-        self.verify = True if verify else False
+        self.verify = True if verify is not False else False
         self.timeout = timeout
         self.sleep_max = sleep_max
         self.retry_max = retry_max
