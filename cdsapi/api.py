@@ -402,6 +402,9 @@ class Client(object):
 
     def _api(self, url, request, method):
 
+        if not isinstance(request,dict):
+            raise ValueError("Request must be a dictionary, got %s"%(type(request)))
+
         self._status(url)
 
         session = self.session
