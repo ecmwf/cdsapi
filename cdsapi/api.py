@@ -642,3 +642,13 @@ class Client(object):
     def get_requests(self):
         r = self.session.get('https://cds.climate.copernicus.eu/broker/api/v1/0/requests')
         return r.json()
+
+    def get_request_IDs(self):
+        r = self.get_requests()
+        ids = [x['metadata']['requestId'] for x in r]
+        return ids
+
+    def get_request_meta(self, request_id):
+        r = self.get_requests()
+        metadata = [x for x in r if x['metadata']['requestId'] == request_id][0]
+        return metadata
