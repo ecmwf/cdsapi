@@ -638,3 +638,7 @@ class Client(object):
                 self.info("Retrying now...")
 
         return wrapped
+
+    def get_requests(self):
+        r = self.session.get('https://cds.climate.copernicus.eu/broker/api/v1/0/requests')
+        return r.json()
