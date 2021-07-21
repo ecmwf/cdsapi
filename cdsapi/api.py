@@ -648,7 +648,17 @@ class Client(object):
         ids = [x['metadata']['requestId'] for x in r]
         return ids
 
+    def get_request_result(self, rid):
+        reply = self.get_request_meta(rid)
+        rep = reply['status']
+        rep["request_id"] = rid
+        #rep['location'] =  rep['data'][0]['location']
+        r = Result(self, rep)
+        r.update()
+        return r
+
     def get_request_meta(self, request_id):
         r = self.get_requests()
+        print(request_id)
         metadata = [x for x in r if x['metadata']['requestId'] == request_id][0]
         return metadata
