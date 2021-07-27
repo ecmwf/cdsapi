@@ -345,7 +345,11 @@ class Client(object):
         )
 
     def retrieve(self, name, request, target=None):
-        result = self._api("%s/resources/%s" % (self.url, name), request, "POST")
+        rid = self.check_request(name, request)
+        if not rid:
+            result = self._api("%s/resources/%s" % (self.url, name), request, "POST")
+        else:
+            result = self.get_request_result(rid)
         if target is not None:
             result.download(target)
         return result
@@ -662,3 +666,27 @@ class Client(object):
         print(request_id)
         metadata = [x for x in r if x['metadata']['requestId'] == request_id][0]
         return metadata
+
+    def check_request(self, dataset, request):
+        """
+        Check if a request is available
+
+        :param dataset: dataset to check for
+        :param request: request to check for
+        :return: request id (str) if available, False if not
+        """
+        requests = self.get_requests()
+        for r in requests:
+            match = True
+            if r['metadata']['resource'] == dataset:
+                for key in r["request"]["specific"].keys():
+                    if key in request.keys():
+                        if not r["request"]["specific"][key] == request[key]:
+                            match = False
+            else:
+                match = False
+            
+            if match:
+                return r['metadata']['requestId']
+        
+        return False
