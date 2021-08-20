@@ -282,7 +282,7 @@ class Client(object):
             self.logger.setLevel(level)
             handler = logging.StreamHandler()
             handler.setFormatter(formatter)
-            self.logger.addHandler(formatter)
+            self.logger.addHandler(handler)
 
         dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
 
