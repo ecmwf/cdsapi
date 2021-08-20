@@ -278,9 +278,11 @@ class Client(object):
             else:
                 level = logging.INFO
 
-            logging.basicConfig(
-                level=level, format="%(asctime)s %(levelname)s %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+            self.logger.setLevel(level)
+            handler = logging.StreamHandler()
+            handler.setFormatter(formatter)
+            self.logger.addHandler(formatter)
 
         dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
 
