@@ -254,7 +254,7 @@ class Client(object):
         key=os.environ.get("CDSAPI_KEY"),
         quiet=False,
         debug=False,
-        verify=None,
+        verify=True,
         timeout=60,
         progress=True,
         full_stack=False,
