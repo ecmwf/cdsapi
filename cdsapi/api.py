@@ -377,7 +377,7 @@ class Client(object):
 
     def status(self, context=None):
         url = "%s/status.json" % (self.url,)
-        r = self.session.get(url, verify=self.verify)
+        r = self.session.get(url, verify=self.verify, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
 
@@ -601,40 +601,36 @@ class Client(object):
 
         def wrapped(*args, **kwargs):
             tries = 0
-            while tries < self.retry_max:
+            while True:
+
+                txt = "Error"
                 try:
-                    r = call(*args, **kwargs)
+                    resp = call(*args, **kwargs)
                 except (
                     requests.exceptions.ConnectionError,
                     requests.exceptions.ReadTimeout,
                 ) as e:
-                    r = None
-                    self.warning(
-                        "Recovering from connection error [%s], attemps %s of %s",
-                        e,
-                        tries,
-                        self.retry_max,
-                    )
+                    resp = None
+                    txt = f"Connection error: [{e}]"
 
-                if r is not None:
-                    if not retriable(r.status_code, r.reason):
-                        return r
+                if resp is not None:
+                    if not retriable(resp.status_code, resp.reason):
+                        break
                     try:
-                        self.warning(r.json()["reason"])
+                        self.warning(resp.json()["reason"])
                     except Exception:
                         pass
-                    self.warning(
-                        "Recovering from HTTP error [%s %s], attemps %s of %s",
-                        r.status_code,
-                        r.reason,
-                        tries,
-                        self.retry_max,
-                    )
+                    txt = f"HTTP error: [{resp.status_code} {resp.reason}]"
 
                 tries += 1
+                self.warning(txt + f". Attempt {tries} of {self.retry_max}.")
+                if tries < self.retry_max:
+                    self.warning(f"Retrying in {self.sleep_max} seconds")
+                    time.sleep(self.sleep_max)
+                    self.info("Retrying now...")
+                else:
+                    raise Exception('Could not connect')
 
-                self.warning("Retrying in %s seconds", self.sleep_max)
-                time.sleep(self.sleep_max)
-                self.info("Retrying now...")
+            return resp
 
         return wrapped
