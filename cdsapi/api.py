@@ -206,7 +206,8 @@ class Result(object):
         task_url = "%s/tasks/%s" % (self._url, request_id)
         self.debug("GET %s", task_url)
 
-        result = self.robust(self.session.get)(task_url, verify=self.verify)
+        result = self.robust(self.session.get)(task_url, verify=self.verify,
+                                               timeout=self.timeout)
         result.raise_for_status()
         self.reply = result.json()
 
@@ -221,7 +222,8 @@ class Result(object):
             task_url = "%s/tasks/%s" % (self._url, rid)
             self.debug("DELETE %s", task_url)
 
-            delete = self.session.delete(task_url, verify=self.verify)
+            delete = self.session.delete(task_url, verify=self.verify,
+                                         timeout=self.timeout)
             self.debug("DELETE returns %s %s", delete.status_code, delete.reason)
 
             try:
