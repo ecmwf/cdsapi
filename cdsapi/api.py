@@ -14,6 +14,7 @@ import os
 import logging
 import uuid
 import requests
+import pkg_resources
 
 try:
     from urllib.parse import urljoin
@@ -322,6 +323,9 @@ class Client(object):
 
         self.session = session
         self.session.auth = tuple(self.key.split(":", 2))
+        self.session.headers = {
+            'User-Agent': 'cdsapi/%s' % pkg_resources.get_distribution('cdsapi').version,
+        }
 
         self.metadata = metadata
         self.forget = forget
