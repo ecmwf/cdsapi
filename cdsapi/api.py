@@ -300,7 +300,7 @@ class Client(object):
         if url is None or key is None or key is None:
             raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
 
-        # If verify is still None they we give default value of True
+        # If verify is still None then we give default value of True
         if verify is None:
             verify = True
 
