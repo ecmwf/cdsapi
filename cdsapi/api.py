@@ -295,10 +295,14 @@ class Client(object):
                     url = config.get("url")
 
                 if verify is None:
-                    verify = int(config.get("verify", 1))
+                    verify = bool(int(config.get("verify", 1)))
 
         if url is None or key is None or key is None:
             raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
+
+        # If verify is still None, then we set to default value of True
+        if verify is None:
+            verify = True
 
         self.url = url
         self.key = key
