@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, ubuntu-latest, macos-latest]
-        python-version: ["2.7", "3.6", "3.7", "3.8", "3.9"]
+        python-version: ["3.7", "3.8", "3.9"]
 
     name: Python ${{ matrix.python-version }} on ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
@@ -34,12 +34,12 @@ jobs:
       - name: Tokens
         shell: python
         env:
-          CDSAPI_RC: ${{ secrets.CDSAPIRC }}
+          CDSAPIRC: ${{ secrets.CDSAPIRC }}
 
         run: |
           from __future__ import print_function
           import os
-          for n in ('CDSAPI_RC',):
+          for n in ('CDSAPIRC',):
               m = os.path.expanduser("~/." + n.lower())
               if os.environ[n]:
                   with open(m, "w") as f:
