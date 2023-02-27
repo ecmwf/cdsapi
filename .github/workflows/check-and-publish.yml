@@ -46,6 +46,8 @@ jobs:
                       print(os.environ[n], file=f)
 
       - name: Tests
+        env:
+          CDSAPI_RC: ${{ secrets.CDSAPIRC }}
         run: |
           python setup.py develop
           pip install pytest
