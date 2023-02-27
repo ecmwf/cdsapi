@@ -12,7 +12,21 @@ on:
 
 
 jobs:
-  checks:
+  quality-checks:
+    name: Code QA
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: pip install black flake8 isort
+      - run: black --version
+      - run: isort --version
+      - run: flake8 --version
+      - run: isort --check .
+      - run: black --check .
+      - run: flake8 .
+
+  platform-checks:
+    needs: quality-checks
     strategy:
       fail-fast: false
       matrix:
@@ -41,11 +55,11 @@ jobs:
           pytest
 
   deploy:
+    needs: platform-checks
 
     if: ${{ github.event_name == 'release' }}
 
     name: Upload to Pypi
-    needs: checks
 
     runs-on: ubuntu-latest
 
