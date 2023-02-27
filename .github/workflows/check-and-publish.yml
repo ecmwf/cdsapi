@@ -31,23 +31,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Tokens
-        shell: python
-        env:
-          CDSAPIRC: ${{ secrets.CDSAPIRC }}
-
-        run: |
-          from __future__ import print_function
-          import os
-          for n in ('CDSAPIRC',):
-              m = os.path.expanduser("~/." + n.lower())
-              if os.environ[n]:
-                  with open(m, "w") as f:
-                      print(os.environ[n], file=f)
-
       - name: Tests
         env:
-          CDSAPI_RC: ${{ secrets.CDSAPIRC }}
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api/v2
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         run: |
           python setup.py develop
           pip install pytest
