@@ -1,4 +1,7 @@
-import json, sys, cdsapi
+import json
+import sys
+
+import cdsapi
 
 with open("/input/request.json") as req:
     request = json.load(req)

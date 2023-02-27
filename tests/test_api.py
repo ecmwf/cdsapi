@@ -1,5 +1,7 @@
-import cdsapi
 import os
+
+import cdsapi
+
 
 def test_request():
 
@@ -11,7 +13,7 @@ def test_request():
             "variable": "2t",
             "product_type": "reanalysis",
             "date": "2012-12-01",
-            "time": "12:00"
+            "time": "12:00",
         },
     )
 

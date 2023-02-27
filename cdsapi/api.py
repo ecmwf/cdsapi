@@ -6,13 +6,15 @@
 # granted to it by virtue of its status as an intergovernmental organisation nor
 # does it submit to any jurisdiction.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
 import json
-import time
-import os
 import logging
+import os
+import time
 import uuid
+
 import requests
 
 try:
@@ -326,7 +328,7 @@ class Client(object):
 
         self.session = session
         self.session.auth = tuple(self.key.split(":", 2))
-        assert len(self.session.auth)==2, (
+        assert len(self.session.auth) == 2, (
             "The cdsapi key provided is not the correct format, please ensure it conforms to:\n"
             "<UID>:<APIKEY>"
         )
@@ -361,7 +363,7 @@ class Client(object):
     def service(self, name, *args, **kwargs):
         self.delete = False  # Don't delete results
         name = "/".join(name.split("."))
-        mimic_ui = kwargs.pop('mimic_ui', False)
+        mimic_ui = kwargs.pop("mimic_ui", False)
         # To mimic the CDS ui the request should be populated directly with the kwargs
         if mimic_ui:
             request = kwargs
