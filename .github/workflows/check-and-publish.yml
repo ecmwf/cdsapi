@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, ubuntu-latest, macos-latest]
-        python-version: ["2.7", "3.6", "3.7", "3.8", "3.9"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     name: Python ${{ matrix.python-version }} on ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
@@ -31,21 +31,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Tokens
-        shell: python
-        env:
-          CDSAPIRC: ${{ secrets.CDSAPIRC }}
-
-        run: |
-          from __future__ import print_function
-          import os
-          for n in ('CDSAPIRC',):
-              m = os.path.expanduser("~/." + n.lower())
-              if os.environ[n]:
-                  with open(m, "w") as f:
-                      print(os.environ[n], file=f)
-
       - name: Tests
+        env:
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api/v2
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         run: |
           python setup.py develop
           pip install pytest
