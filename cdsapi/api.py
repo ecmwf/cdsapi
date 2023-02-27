@@ -322,6 +322,10 @@ class Client(object):
 
         self.session = session
         self.session.auth = tuple(self.key.split(":", 2))
+        assert len(self.session.auth)==2, (
+            "The cdsapi key provided is not the correct format, please ensure it conforms to:\n"
+            "<UID>:<APIKEY>"
+        )
 
         self.metadata = metadata
         self.forget = forget
