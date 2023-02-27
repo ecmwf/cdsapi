@@ -34,12 +34,12 @@ jobs:
       - name: Tokens
         shell: python
         env:
-          CDSAPIRC: ${{ secrets.CDSAPIRC }}
+          CDSAPI_RC: ${{ secrets.CDSAPIRC }}
 
         run: |
           from __future__ import print_function
           import os
-          for n in ('CDSAPIRC',):
+          for n in ('CDSAPI_RC',):
               m = os.path.expanduser("~/." + n.lower())
               if os.environ[n]:
                   with open(m, "w") as f:
