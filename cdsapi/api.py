@@ -14,8 +14,8 @@ import os
 import time
 import uuid
 
-import requests
 import pkg_resources
+import requests
 
 try:
     from urllib.parse import urljoin
