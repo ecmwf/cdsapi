@@ -9,10 +9,11 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
-import time
-import os
 import logging
+import os
+import time
 import uuid
+
 import requests
 import pkg_resources
 
@@ -36,16 +37,15 @@ def bytes_to_string(n):
 def read_config(path):
     config = {}
     with open(path) as f:
-        for l in f.readlines():
-            if ":" in l:
-                k, v = l.strip().split(":", 1)
+        for line in f.readlines():
+            if ":" in line:
+                k, v = line.strip().split(":", 1)
                 if k in ("url", "key", "verify"):
                     config[k] = v.strip()
     return config
 
 
 def toJSON(obj):
-
     to_json = getattr(obj, "toJSON", None)
     if callable(to_json):
         return to_json()
@@ -64,7 +64,6 @@ def toJSON(obj):
 
 class Result(object):
     def __init__(self, client, reply):
-
         self.reply = reply
 
         self._url = client.url
@@ -96,7 +95,6 @@ class Result(object):
         return r
 
     def _download(self, url, size, target):
-
         if target is None:
             target = url.split("/")[-1]
 
@@ -110,7 +108,6 @@ class Result(object):
         headers = None
 
         while tries < self.retry_max:
-
             r = self.robust(self.session.get)(
                 url,
                 stream=True,
@@ -212,7 +209,6 @@ class Result(object):
         self.reply = result.json()
 
     def delete(self):
-
         if self._deleted:
             return
 
@@ -246,7 +242,6 @@ class Result(object):
 
 
 class Client(object):
-
     logger = logging.getLogger("cdsapi")
 
     def __init__(
@@ -271,17 +266,20 @@ class Client(object):
         forget=False,
         session=requests.Session(),
     ):
-
         if not quiet:
-
             if debug:
                 level = logging.DEBUG
             else:
                 level = logging.INFO
 
-            logging.basicConfig(
-                level=level, format="%(asctime)s %(levelname)s %(message)s"
-            )
+            self.logger.setLevel(level)
+
+            # avoid duplicate handlers when creating more than one Client
+            if not self.logger.handlers:
+                formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+                handler = logging.StreamHandler()
+                handler.setFormatter(formatter)
+                self.logger.addHandler(handler)
 
         dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
 
@@ -296,10 +294,14 @@ class Client(object):
                     url = config.get("url")
 
                 if verify is None:
-                    verify = int(config.get("verify", 1))
+                    verify = bool(int(config.get("verify", 1)))
 
         if url is None or key is None or key is None:
             raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
+
+        # If verify is still None, then we set to default value of True
+        if verify is None:
+            verify = True
 
         self.url = url
         self.key = key
@@ -326,6 +328,11 @@ class Client(object):
         self.session.headers = {
             'User-Agent': 'cdsapi/%s' % pkg_resources.get_distribution('cdsapi').version,
         }
+
+        assert len(self.session.auth) == 2, (
+            "The cdsapi key provided is not the correct format, please ensure it conforms to:\n"
+            "<UID>:<APIKEY>"
+        )
 
         self.metadata = metadata
         self.forget = forget
@@ -357,7 +364,7 @@ class Client(object):
     def service(self, name, *args, **kwargs):
         self.delete = False  # Don't delete results
         name = "/".join(name.split("."))
-        mimic_ui = kwargs.pop('mimic_ui', False)
+        mimic_ui = kwargs.pop("mimic_ui", False)
         # To mimic the CDS ui the request should be populated directly with the kwargs
         if mimic_ui:
             request = kwargs
@@ -405,7 +412,6 @@ class Client(object):
             pass
 
     def _api(self, url, request, method):
-
         self._status(url)
 
         session = self.session
@@ -431,7 +437,6 @@ class Client(object):
             result.raise_for_status()
             reply = result.json()
         except Exception:
-
             if reply is None:
                 try:
                     reply = result.json()
@@ -461,7 +466,6 @@ class Client(object):
         sleep = 1
 
         while True:
-
             self.debug("REPLY %s", reply)
 
             if reply["state"] != self.last_state:
@@ -539,7 +543,6 @@ class Client(object):
             self.logger.debug(*args, **kwargs)
 
     def _download(self, results, targets=None):
-
         if isinstance(results, Result):
             if targets:
                 path = targets.pop(0)
@@ -551,7 +554,6 @@ class Client(object):
             return [self._download(x, targets) for x in results]
 
         if isinstance(results, dict):
-
             if "location" in results and "contentLength" in results:
                 reply = dict(
                     location=results["location"],
@@ -590,7 +592,6 @@ class Client(object):
 
     def robust(self, call):
         def retriable(code, reason):
-
             if code in [
                 requests.codes.internal_server_error,
                 requests.codes.bad_gateway,
