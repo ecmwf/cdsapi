@@ -4,7 +4,6 @@ import cdsapi
 
 
 def test_request():
-
     c = cdsapi.Client()
 
     r = c.retrieve(

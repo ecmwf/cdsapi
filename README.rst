@@ -10,7 +10,7 @@ Install via `pip` with::
 Configure
 ---------
 
-Get your UID and API key from the CDS portal at the address https://cds.climate.copernicus.eu/user
+Get your user ID (UID) and API key from the CDS portal at the address https://cds.climate.copernicus.eu/user
 and write it into the configuration file, so it looks like::
 
     $ cat ~/.cdsapirc
