@@ -326,7 +326,8 @@ class Client(object):
         self.session = session
         self.session.auth = tuple(self.key.split(":", 2))
         self.session.headers = {
-            'User-Agent': 'cdsapi/%s' % pkg_resources.get_distribution('cdsapi').version,
+            "User-Agent": "cdsapi/%s"
+            % pkg_resources.get_distribution("cdsapi").version,
         }
 
         assert len(self.session.auth) == 2, (
