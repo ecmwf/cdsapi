@@ -204,8 +204,9 @@ class Result(object):
         task_url = "%s/tasks/%s" % (self._url, request_id)
         self.debug("GET %s", task_url)
 
-        result = self.robust(self.session.get)(task_url, verify=self.verify,
-                                               timeout=self.timeout)
+        result = self.robust(self.session.get)(
+            task_url, verify=self.verify, timeout=self.timeout
+        )
         result.raise_for_status()
         self.reply = result.json()
 
@@ -219,8 +220,9 @@ class Result(object):
             task_url = "%s/tasks/%s" % (self._url, rid)
             self.debug("DELETE %s", task_url)
 
-            delete = self.session.delete(task_url, verify=self.verify,
-                                         timeout=self.timeout)
+            delete = self.session.delete(
+                task_url, verify=self.verify, timeout=self.timeout
+            )
             self.debug("DELETE returns %s %s", delete.status_code, delete.reason)
 
             try:
@@ -610,7 +612,6 @@ class Client(object):
         def wrapped(*args, **kwargs):
             tries = 0
             while True:
-
                 txt = "Error"
                 try:
                     resp = call(*args, **kwargs)
@@ -637,7 +638,7 @@ class Client(object):
                     time.sleep(self.sleep_max)
                     self.info("Retrying now...")
                 else:
-                    raise Exception('Could not connect')
+                    raise Exception("Could not connect")
 
             return resp
 
