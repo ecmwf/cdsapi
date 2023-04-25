@@ -1,4 +1,9 @@
 import os
+import pathlib
+import re
+
+import pytest
+import requests_mock
 
 import cdsapi
 
@@ -19,3 +24,43 @@ def test_request():
     r.download("test.grib")
 
     assert os.path.getsize("test.grib") == 2076600
+
+
+def test_result_with_opened_target(tmp_path: pathlib.Path) -> None:
+    """Tests whether a result can be downloaded in an opened target."""
+    target_file = tmp_path / "test.grib"
+
+    c = cdsapi.Client("https://example.com/", key="foo:bar")
+    r = cdsapi.api.Result(c, {"message": "", "state": "completed", "location": "https://example.com/file", "content_length": 6})
+
+    with requests_mock.Mocker() as m:
+        m.get(requests_mock.ANY, content=b"foobar")
+
+        r.download(target_file)
+
+    assert target_file.stat().st_size == 6
+
+
+def test_result_with_io_target(tmp_path: pathlib.Path) -> None:
+    """Tests whether a result can be downloaded directly into an IO target object."""
+    target_file = tmp_path / "test.grib"
+
+    c = cdsapi.Client("https://example.com/", key="foo:bar")
+    r = cdsapi.api.Result(c, {"message": "", "state": "completed", "location": "https://example.com/file", "content_length": 6})
+
+    with requests_mock.Mocker() as m:
+        m.get(requests_mock.ANY, content=b"foobar")
+
+        with target_file.open("wb") as target:
+            r.download(target)
+
+    assert target_file.stat().st_size == 6
+
+
+def test_invalid_target(tmp_path: pathlib.Path) -> None:
+    """Tests whether a TypeError is raised for an unsupported target type."""
+    target_file = tmp_path / "test.grib"
+
+    with pytest.raises(TypeError, match=re.compile("invalid value for target", re.I)):
+        with target_file.open("wt") as target:
+            cdsapi.api._open_target(target)  # type: ignore[arg-type]

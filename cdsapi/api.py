@@ -6,13 +6,15 @@
 # granted to it by virtue of its status as an intergovernmental organisation nor
 # does it submit to any jurisdiction.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+from __future__ import annotations, absolute_import, division, print_function, unicode_literals
 
 import json
 import logging
 import os
 import time
 import uuid
+import io
+from typing import IO
 
 import pkg_resources
 import requests
@@ -62,6 +64,24 @@ def toJSON(obj):
     return obj
 
 
+def _open_target(target: str | bytes | os.PathLike | io.RawIOBase | io.BufferedIOBase) -> IO[bytes]:
+    """Creates a BinaryIO context manager given a certain destination file target."""
+    ERR_MSG = "Invalid value for target. Use None, path string or bytes, or a file-like object."
+
+    if isinstance(target, (str, bytes, os.PathLike)):
+        file = open(target, "wb")
+    elif isinstance(target, (io.RawIOBase, io.BufferedIOBase)):
+        try:
+            file = target
+            file.seek(0)
+        except TypeError as e:
+            raise TypeError(ERR_MSG) from e
+    else:
+        raise TypeError(ERR_MSG)
+
+    return file
+
+
 class Result(object):
     def __init__(self, client, reply):
         self.reply = reply
@@ -101,60 +121,58 @@ class Result(object):
         self.info("Downloading %s to %s (%s)", url, target, bytes_to_string(size))
         start = time.time()
 
-        mode = "wb"
         total = 0
         sleep = 10
         tries = 0
         headers = None
 
-        while tries < self.retry_max:
-            r = self.robust(self.session.get)(
-                url,
-                stream=True,
-                verify=self.verify,
-                headers=headers,
-                timeout=self.timeout,
-            )
-            try:
-                r.raise_for_status()
+        with _open_target(target) as f:
+            while tries < self.retry_max:
+                r = self.robust(self.session.get)(
+                    url,
+                    stream=True,
+                    verify=self.verify,
+                    headers=headers,
+                    timeout=self.timeout,
+                )
+                try:
+                    r.raise_for_status()
 
-                with tqdm(
-                    total=size,
-                    unit_scale=True,
-                    unit_divisor=1024,
-                    unit="B",
-                    disable=not self.progress,
-                    leave=False,
-                ) as pbar:
-                    pbar.update(total)
-                    with open(target, mode) as f:
+                    with tqdm(
+                        total=size,
+                        unit_scale=True,
+                        unit_divisor=1024,
+                        unit="B",
+                        disable=not self.progress,
+                        leave=False,
+                    ) as pbar:
+                        pbar.update(total)
                         for chunk in r.iter_content(chunk_size=1024):
                             if chunk:
                                 f.write(chunk)
                                 total += len(chunk)
                                 pbar.update(len(chunk))
 
-            except requests.exceptions.ConnectionError as e:
-                self.error("Download interupted: %s" % (e,))
-            finally:
-                r.close()
+                except requests.exceptions.ConnectionError as e:
+                    self.error("Download interrupted: %s" % (e,))
+                finally:
+                    r.close()
 
-            if total >= size:
-                break
+                if total >= size:
+                    break
 
-            self.error(
-                "Download incomplete, downloaded %s byte(s) out of %s" % (total, size)
-            )
-            self.warning("Sleeping %s seconds" % (sleep,))
-            time.sleep(sleep)
-            mode = "ab"
-            total = os.path.getsize(target)
-            sleep *= 1.5
-            if sleep > self.sleep_max:
-                sleep = self.sleep_max
-            headers = {"Range": "bytes=%d-" % total}
-            tries += 1
-            self.warning("Resuming download at byte %s" % (total,))
+                self.error(
+                    "Download incomplete, downloaded %s byte(s) out of %s" % (total, size)
+                )
+                self.warning("Sleeping %s seconds" % (sleep,))
+                time.sleep(sleep)
+                total = f.tell()
+                sleep *= 1.5
+                if sleep > self.sleep_max:
+                    sleep = self.sleep_max
+                headers = {"Range": "bytes=%d-" % total}
+                tries += 1
+                self.warning("Resuming download at byte %s" % (total,))
 
         if total != size:
             raise Exception(
