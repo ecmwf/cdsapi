@@ -7,6 +7,10 @@ on:
   pull_request:
     branches: [master]
 
+  # Trigger on public pull request approval
+  pull_request_target:
+    types: [labeled]
+
   release:
     types: [created]
 
@@ -15,7 +19,7 @@ jobs:
     name: Code QA
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip install black flake8 isort
       - run: black --version
       - run: isort --version
@@ -26,6 +30,7 @@ jobs:
 
   platform-checks:
     needs: quality-checks
+    if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
     strategy:
       fail-fast: false
       matrix:
@@ -38,7 +43,9 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - uses: actions/setup-python@v2
         with:
@@ -63,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
