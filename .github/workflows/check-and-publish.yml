@@ -2,14 +2,13 @@ name: Check and publish
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
   release:
     types: [created]
-
 
 jobs:
   quality-checks:
@@ -64,26 +63,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python setup.py sdist
-        twine upload dist/*
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python setup.py sdist
+          twine upload dist/*
 
-    - name: Notify climetlab
-      uses: mvasigh/dispatch-action@main
-      with:
+      - name: Notify climetlab
+        uses: mvasigh/dispatch-action@main
+        with:
           token: ${{ secrets.NOTIFY_ECMWFLIBS }}
           repo: climetlab
           owner: ecmwf
