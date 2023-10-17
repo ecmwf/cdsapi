@@ -6,7 +6,6 @@
 # granted to it by virtue of its status as an intergovernmental organisation nor
 # does it submit to any jurisdiction.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import logging
@@ -31,7 +30,7 @@ def bytes_to_string(n):
     while n >= 1024:
         n /= 1024.0
         i += 1
-    return "%g%s" % (int(n * 10 + 0.5) / 10.0, u[i])
+    return f"{int(n * 10 + 0.5) / 10.0:g}{u[i]}"
 
 
 def read_config(path):
@@ -62,7 +61,7 @@ def toJSON(obj):
     return obj
 
 
-class Result(object):
+class Result:
     def __init__(self, client, reply):
         self.reply = reply
 
@@ -135,17 +134,15 @@ class Result(object):
                                 pbar.update(len(chunk))
 
             except requests.exceptions.ConnectionError as e:
-                self.error("Download interupted: %s" % (e,))
+                self.error(f"Download interupted: {e}")
             finally:
                 r.close()
 
             if total >= size:
                 break
 
-            self.error(
-                "Download incomplete, downloaded %s byte(s) out of %s" % (total, size)
-            )
-            self.warning("Sleeping %s seconds" % (sleep,))
+            self.error(f"Download incomplete, downloaded {total} byte(s) out of {size}")
+            self.warning(f"Sleeping {sleep} seconds")
             time.sleep(sleep)
             mode = "ab"
             total = os.path.getsize(target)
@@ -154,11 +151,11 @@ class Result(object):
                 sleep = self.sleep_max
             headers = {"Range": "bytes=%d-" % total}
             tries += 1
-            self.warning("Resuming download at byte %s" % (total,))
+            self.warning(f"Resuming download at byte {total}")
 
         if total != size:
             raise Exception(
-                "Download failed: downloaded %s byte(s) out of %s" % (total, size)
+                f"Download failed: downloaded {total} byte(s) out of {size}"
             )
 
         elapsed = time.time() - start
@@ -183,7 +180,7 @@ class Result(object):
         return self.reply["content_type"]
 
     def __repr__(self):
-        return "Result(content_length=%s,content_type=%s,location=%s)" % (
+        return "Result(content_length={},content_type={},location={})".format(
             self.content_length,
             self.content_type,
             self.location,
@@ -201,7 +198,7 @@ class Result(object):
     def update(self, request_id=None):
         if request_id is None:
             request_id = self.reply["request_id"]
-        task_url = "%s/tasks/%s" % (self._url, request_id)
+        task_url = f"{self._url}/tasks/{request_id}"
         self.debug("GET %s", task_url)
 
         result = self.robust(self.session.get)(
@@ -217,7 +214,7 @@ class Result(object):
         if "request_id" in self.reply:
             rid = self.reply["request_id"]
 
-            task_url = "%s/tasks/%s" % (self._url, rid)
+            task_url = f"{self._url}/tasks/{rid}"
             self.debug("DELETE %s", task_url)
 
             delete = self.session.delete(
@@ -245,7 +242,7 @@ class Result(object):
             print(e)
 
 
-class Client(object):
+class Client:
     logger = logging.getLogger("cdsapi")
 
     def __init__(
@@ -361,7 +358,7 @@ class Client(object):
         )
 
     def retrieve(self, name, request, target=None):
-        result = self._api("%s/resources/%s" % (self.url, name), request, "POST")
+        result = self._api(f"{self.url}/resources/{name}", request, "POST")
         if target is not None:
             result.download(target)
         return result
@@ -380,7 +377,7 @@ class Client(object):
             request["_cds_metadata"] = self.metadata
         request = toJSON(request)
         result = self._api(
-            "%s/tasks/services/%s/clientid-%s" % (self.url, name, uuid.uuid4().hex),
+            f"{self.url}/tasks/services/{name}/clientid-{uuid.uuid4().hex}",
             request,
             "PUT",
         )
@@ -392,7 +389,7 @@ class Client(object):
         return self.service("tool.toolbox.orchestrator.run_workflow", params)
 
     def status(self, context=None):
-        url = "%s/status.json" % (self.url,)
+        url = f"{self.url}/status.json"
         r = self.session.get(url, verify=self.verify, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
@@ -474,7 +471,7 @@ class Client(object):
             self.debug("REPLY %s", reply)
 
             if reply["state"] != self.last_state:
-                self.info("Request is %s" % (reply["state"],))
+                self.info(f"Request is {reply['state']}")
                 self.last_state = reply["state"]
 
             if reply["state"] == "completed":
@@ -494,7 +491,7 @@ class Client(object):
                 if sleep > self.sleep_max:
                     sleep = self.sleep_max
 
-                task_url = "%s/tasks/%s" % (self.url, rid)
+                task_url = f"{self.url}/tasks/{rid}"
                 self.debug("GET %s", task_url)
 
                 result = self.robust(session.get)(
@@ -521,7 +518,7 @@ class Client(object):
                     % (reply["error"].get("message"), reply["error"].get("reason"))
                 )
 
-            raise Exception("Unknown API state [%s]" % (reply["state"],))
+            raise Exception(f"Unknown API state [{reply['state']}]")
 
     def info(self, *args, **kwargs):
         if self.info_callback:
