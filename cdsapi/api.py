@@ -250,8 +250,8 @@ class Client(object):
 
     def __init__(
         self,
-        url=os.environ.get("CDSAPI_URL"),
-        key=os.environ.get("CDSAPI_KEY"),
+        url=None,
+        key=None,
         quiet=False,
         debug=False,
         verify=None,
@@ -285,6 +285,10 @@ class Client(object):
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
 
+        if url is None:
+            url = os.environ.get("CDSAPI_URL")
+        if key is None:
+            key = os.environ.get("CDSAPI_KEY")
         dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
 
         if url is None or key is None:
