@@ -56,8 +56,8 @@ jobs:
           CDSAPI_URL: https://cds.climate.copernicus.eu/api/v2
           CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         run: |
-          python setup.py develop
-          pip install pytest
+          python -m pip install --upgrade pip
+          pip install -e .[tests]
           pytest
 
   deploy:
@@ -78,13 +78,14 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install setuptools wheel twine
+          pip install build twine
       - name: Build and publish
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          python setup.py sdist
+          python -m build
+          twine check --strict dist/*
           twine upload dist/*
 
       - name: Notify climetlab

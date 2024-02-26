@@ -4,9 +4,9 @@
 How to develop
 --------------
 
-Install the package following README.rst and then install development dependencies::
+Install the package following README.rst and then install development dependencies (``-U`` is optional)::
 
-    $ pip install -U -r tests/requirements-dev.txt
+    $ pip install -U -e .[test]
 
 Unit tests can be run with `pytest <https://pytest.org>`_ with::
 
@@ -30,9 +30,7 @@ Please ensure the coverage at least stays the same before you submit a pull requ
 Dependency management
 ---------------------
 
-Update the `requirements-tests.txt` file with versions with::
-
-    pip-compile -U -o tests/requirements-tests.txt setup.py tests/requirements-tests.in  # -U is optional
+Update the ``tests/requirements.txt``.
 
 
 Release procedure
