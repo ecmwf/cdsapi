@@ -16,7 +16,7 @@ def read_config(path):
     return config
 
 
-class LegacyClient(abc.ABC):
+class AbstractLegacyClient(abc.ABC):
     logger = logging.getLogger("cdsapi")
 
     def __init__(

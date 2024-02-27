@@ -1,4 +1,4 @@
-import cads_api_client.legacy_client
+import cads_api_client.legacy_api_client
 import pytest
 
 import cdsapi
@@ -16,7 +16,7 @@ import cdsapi.api
         (
             "http://cds2-test.copernicus-climate.eu/api",
             "00000000-0000-4000-a000-000000000000",
-            cads_api_client.legacy_client.LegacyClient,
+            cads_api_client.legacy_api_client.LegacyApiClient,
         ),
     ],
 )

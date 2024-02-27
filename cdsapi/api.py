@@ -23,7 +23,7 @@ except ImportError:
 
 from tqdm import tqdm
 
-from . import legacy_client
+from . import abstract_legacy_client
 
 
 def bytes_to_string(n):
@@ -235,7 +235,7 @@ class Result(object):
             print(e)
 
 
-class Client(legacy_client.LegacyClient):
+class Client(abstract_legacy_client.AbstractLegacyClient):
     def _initialize_session(self, session):
         self.session = session
         self.session.auth = tuple(self.key.split(":", 2))

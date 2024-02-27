@@ -1,16 +1,16 @@
 import functools
 
-import cads_api_client.legacy_client
+import cads_api_client.legacy_api_client
 
-from . import api, legacy_client
+from . import abstract_legacy_client, api
 
 
-class Client(legacy_client.LegacyClient):
+class Client(abstract_legacy_client.AbstractLegacyClient):
     @functools.cached_property
     def client(self):
         if ":" in self.key:
             return api.Client(*self.args)
-        return cads_api_client.legacy_client.LegacyClient(*self.args)
+        return cads_api_client.legacy_api_client.LegacyApiClient(*self.args)
 
     def retrieve(self, name, request, target=None):
         return self.client.retrieve(name, request, target)
