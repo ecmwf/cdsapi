@@ -45,6 +45,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
+        "cads-api-client@git+https://github.com/ecmwf-projects/cads-api-client.git@COPDS-1531-beta-api",  # FIXME
         "requests>=2.5.0",
         "tqdm",
     ],
