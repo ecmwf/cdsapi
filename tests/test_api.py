@@ -35,6 +35,6 @@ def test_request(tmp_path, url, key, expected_client):
     )
 
     target = tmp_path / "test.grib"
-    r.download(target)
+    r.download(str(target))
 
     assert target.stat().st_size == 2076600
