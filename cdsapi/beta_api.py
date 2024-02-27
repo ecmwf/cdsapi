@@ -6,15 +6,11 @@ from . import api, legacy_client
 
 
 class Client(legacy_client.LegacyClient):
-
     @functools.cached_property
     def client(self):
-        client = (
-            api.Client
-            if ":" in self.key
-            else cads_api_client.legacy_client.LegacyClient
-        )
-        return client(*self.args)
+        if ":" in self.key:
+            return api.Client(*self.args)
+        return cads_api_client.legacy_client.LegacyClient(*self.args)
 
     def retrieve(self, name, request, target=None):
         return self.client.retrieve(name, request, target)
