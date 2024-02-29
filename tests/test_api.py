@@ -2,7 +2,6 @@ import cads_api_client.legacy_api_client
 import pytest
 
 import cdsapi
-import cdsapi.api
 
 
 @pytest.mark.parametrize(
@@ -11,7 +10,7 @@ import cdsapi.api
         (
             None,
             None,
-            cdsapi.api.Client,
+            cdsapi.Client,
         ),
         (
             "http://cds2-test.copernicus-climate.eu/api",
@@ -22,6 +21,7 @@ import cdsapi.api
 )
 def test_request(tmp_path, url, key, expected_client):
     c = cdsapi.Client(url=url, key=key)
+    assert isinstance(c, cdsapi.Client)
     assert isinstance(c, expected_client)
 
     r = c.retrieve(
