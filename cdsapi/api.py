@@ -14,7 +14,6 @@ import os
 import time
 import uuid
 
-import cads_api_client.legacy_api_client
 import pkg_resources
 import requests
 
@@ -282,6 +281,8 @@ class Client(object):
         _, token, _ = get_url_key_verify(url, key, None)
         if ":" in token:
             return super().__new__(cls)
+        import cads_api_client.legacy_api_client
+
         return cads_api_client.legacy_api_client.LegacyApiClient(
             url, key, *args, **kwargs
         )
