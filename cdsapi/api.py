@@ -346,7 +346,17 @@ class Client(object):
         self.info_callback = info_callback
         self.error_callback = error_callback
 
-        self.session = self._initialize_session(session)
+        self.session = session
+        self.session.auth = tuple(self.key.split(":", 2))
+        self.session.headers = {
+            "User-Agent": "cdsapi/%s"
+            % pkg_resources.get_distribution("cdsapi").version,
+        }
+
+        assert len(self.session.auth) == 2, (
+            "The cdsapi key provided is not the correct format, please ensure it conforms to:\n"
+            "<UID>:<APIKEY>"
+        )
 
         self.metadata = metadata
         self.forget = forget
@@ -368,18 +378,6 @@ class Client(object):
                 forget=self.forget,
             ),
         )
-
-    def _initialize_session(self, session):
-        session.auth = tuple(self.key.split(":", 2))
-        session.headers = {
-            "User-Agent": "cdsapi/%s"
-            % pkg_resources.get_distribution("cdsapi").version,
-        }
-        assert len(session.auth) == 2, (
-            "The cdsapi key provided is not the correct format, please ensure it conforms to:\n"
-            "<UID>:<APIKEY>"
-        )
-        return session
 
     def retrieve(self, name, request, target=None):
         result = self._api("%s/resources/%s" % (self.url, name), request, "POST")
