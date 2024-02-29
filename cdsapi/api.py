@@ -9,10 +9,12 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
+import logging
 import os
 import time
 import uuid
 
+import cads_api_client.legacy_api_client
 import pkg_resources
 import requests
 
@@ -23,8 +25,6 @@ except ImportError:
 
 from tqdm import tqdm
 
-from . import abstract_legacy_client
-
 
 def bytes_to_string(n):
     u = ["", "K", "M", "G", "T", "P"]
@@ -33,6 +33,46 @@ def bytes_to_string(n):
         n /= 1024.0
         i += 1
     return "%g%s" % (int(n * 10 + 0.5) / 10.0, u[i])
+
+
+def read_config(path):
+    config = {}
+    with open(path) as f:
+        for line in f.readlines():
+            if ":" in line:
+                k, v = line.strip().split(":", 1)
+                if k in ("url", "key", "verify"):
+                    config[k] = v.strip()
+    return config
+
+
+def get_url_key_verify(url, key, verify):
+    if url is None:
+        url = os.environ.get("CDSAPI_URL")
+    if key is None:
+        key = os.environ.get("CDSAPI_KEY")
+    dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
+
+    if url is None or key is None:
+        if os.path.exists(dotrc):
+            config = read_config(dotrc)
+
+            if key is None:
+                key = config.get("key")
+
+            if url is None:
+                url = config.get("url")
+
+            if verify is None:
+                verify = bool(int(config.get("verify", 1)))
+
+    if url is None or key is None or key is None:
+        raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
+
+    # If verify is still None, then we set to default value of True
+    if verify is None:
+        verify = True
+    return url, key, verify
 
 
 def toJSON(obj):
@@ -235,19 +275,110 @@ class Result(object):
             print(e)
 
 
-class Client(abstract_legacy_client.AbstractLegacyClient):
+class Client(object):
+    logger = logging.getLogger("cdsapi")
+
+    def __new__(cls, url=None, key=None, *args, **kwargs):
+        _, token, _ = get_url_key_verify(url, key, None)
+        if ":" in token:
+            return super().__new__(cls)
+        return cads_api_client.legacy_api_client.LegacyApiClient(
+            url, key, *args, **kwargs
+        )
+
+    def __init__(
+        self,
+        url=None,
+        key=None,
+        quiet=False,
+        debug=False,
+        verify=None,
+        timeout=60,
+        progress=True,
+        full_stack=False,
+        delete=True,
+        retry_max=500,
+        sleep_max=120,
+        wait_until_complete=True,
+        info_callback=None,
+        warning_callback=None,
+        error_callback=None,
+        debug_callback=None,
+        metadata=None,
+        forget=False,
+        session=requests.Session(),
+    ):
+        if not quiet:
+            if debug:
+                level = logging.DEBUG
+            else:
+                level = logging.INFO
+
+            self.logger.setLevel(level)
+
+            # avoid duplicate handlers when creating more than one Client
+            if not self.logger.handlers:
+                formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+                handler = logging.StreamHandler()
+                handler.setFormatter(formatter)
+                self.logger.addHandler(handler)
+
+        url, key, verify = get_url_key_verify(url, key, verify)
+
+        self.url = url
+        self.key = key
+
+        self.quiet = quiet
+        self.progress = progress and not quiet
+
+        self.verify = True if verify else False
+        self.timeout = timeout
+        self.sleep_max = sleep_max
+        self.retry_max = retry_max
+        self.full_stack = full_stack
+        self.delete = delete
+        self.last_state = None
+        self.wait_until_complete = wait_until_complete
+
+        self.debug_callback = debug_callback
+        self.warning_callback = warning_callback
+        self.info_callback = info_callback
+        self.error_callback = error_callback
+
+        self.session = self._initialize_session(session)
+
+        self.metadata = metadata
+        self.forget = forget
+
+        self.debug(
+            "CDSAPI %s",
+            dict(
+                url=self.url,
+                key=self.key,
+                quiet=self.quiet,
+                verify=self.verify,
+                timeout=self.timeout,
+                progress=self.progress,
+                sleep_max=self.sleep_max,
+                retry_max=self.retry_max,
+                full_stack=self.full_stack,
+                delete=self.delete,
+                metadata=self.metadata,
+                forget=self.forget,
+            ),
+        )
+
     def _initialize_session(self, session):
-        self.session = session
-        self.session.auth = tuple(self.key.split(":", 2))
-        self.session.headers = {
+        session.auth = tuple(self.key.split(":", 2))
+        session.headers = {
             "User-Agent": "cdsapi/%s"
             % pkg_resources.get_distribution("cdsapi").version,
         }
-
-        assert len(self.session.auth) == 2, (
+        assert len(session.auth) == 2, (
             "The cdsapi key provided is not the correct format, please ensure it conforms to:\n"
             "<UID>:<APIKEY>"
         )
+        return session
 
     def retrieve(self, name, request, target=None):
         result = self._api("%s/resources/%s" % (self.url, name), request, "POST")
@@ -411,6 +542,30 @@ class Client(abstract_legacy_client.AbstractLegacyClient):
                 )
 
             raise Exception("Unknown API state [%s]" % (reply["state"],))
+
+    def info(self, *args, **kwargs):
+        if self.info_callback:
+            self.info_callback(*args, **kwargs)
+        else:
+            self.logger.info(*args, **kwargs)
+
+    def warning(self, *args, **kwargs):
+        if self.warning_callback:
+            self.warning_callback(*args, **kwargs)
+        else:
+            self.logger.warning(*args, **kwargs)
+
+    def error(self, *args, **kwargs):
+        if self.error_callback:
+            self.error_callback(*args, **kwargs)
+        else:
+            self.logger.error(*args, **kwargs)
+
+    def debug(self, *args, **kwargs):
+        if self.debug_callback:
+            self.debug_callback(*args, **kwargs)
+        else:
+            self.logger.debug(*args, **kwargs)
 
     def _download(self, results, targets=None):
         if isinstance(results, Result):

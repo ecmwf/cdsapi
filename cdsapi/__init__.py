@@ -18,6 +18,6 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from . import beta_api
+from . import api
 
-Client = beta_api.Client
+Client = api.Client

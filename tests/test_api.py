@@ -22,7 +22,7 @@ import cdsapi.api
 )
 def test_request(tmp_path, url, key, expected_client):
     c = cdsapi.Client(url=url, key=key)
-    assert isinstance(c.client, expected_client)
+    assert isinstance(c, expected_client)
 
     r = c.retrieve(
         "reanalysis-era5-single-levels",
