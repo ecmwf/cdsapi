@@ -1,28 +1,13 @@
+import os
+
 import cads_api_client.legacy_api_client
 import pytest
 
 import cdsapi
 
 
-@pytest.mark.parametrize(
-    "url,key,expected_client",
-    [
-        (
-            None,
-            None,
-            cdsapi.Client,
-        ),
-        (
-            "http://cds2-test.copernicus-climate.eu/api",
-            "00000000-0000-4000-a000-000000000000",
-            cads_api_client.legacy_api_client.LegacyApiClient,
-        ),
-    ],
-)
-def test_request(tmp_path, url, key, expected_client):
-    c = cdsapi.Client(url=url, key=key)
-    assert isinstance(c, cdsapi.Client)
-    assert isinstance(c, expected_client)
+def test_request():
+    c = cdsapi.Client()
 
     r = c.retrieve(
         "reanalysis-era5-single-levels",
@@ -34,7 +19,25 @@ def test_request(tmp_path, url, key, expected_client):
         },
     )
 
-    target = tmp_path / "test.grib"
-    r.download(str(target))
+    r.download("test.grib")
 
-    assert target.stat().st_size == 2076600
+    assert os.path.getsize("test.grib") == 2076600
+
+
+@pytest.mark.parametrize(
+    "key,expected_client",
+    [
+        (
+            ":",
+            cdsapi.Client,
+        ),
+        (
+            "",
+            cads_api_client.legacy_api_client.LegacyApiClient,
+        ),
+    ],
+)
+def test_instantiation(key, expected_client):
+    c = cdsapi.Client(key=key)
+    assert isinstance(c, cdsapi.Client)
+    assert isinstance(c, expected_client)
