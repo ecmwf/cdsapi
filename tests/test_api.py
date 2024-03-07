@@ -38,7 +38,7 @@ def test_request():
     ],
 )
 @pytest.mark.parametrize("key_from_env", [True, False])
-def test_instantiation_from_kwargs(monkeypatch, key, expected_client, key_from_env):
+def test_instantiation(monkeypatch, key, expected_client, key_from_env):
     if key_from_env:
         monkeypatch.setenv("CDSAPI_KEY", key)
         c = cdsapi.Client()
