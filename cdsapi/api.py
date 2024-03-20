@@ -283,9 +283,7 @@ class Client(object):
             return super().__new__(cls)
         import cads_api_client.legacy_api_client
 
-        return cads_api_client.legacy_api_client.LegacyApiClient(
-            url, key, *args, **kwargs
-        )
+        return super().__new__(cads_api_client.legacy_api_client.LegacyApiClient)
 
     def __init__(
         self,
