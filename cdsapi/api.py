@@ -45,6 +45,35 @@ def read_config(path):
     return config
 
 
+def get_url_key_verify(url, key, verify):
+    if url is None:
+        url = os.environ.get("CDSAPI_URL")
+    if key is None:
+        key = os.environ.get("CDSAPI_KEY")
+    dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
+
+    if url is None or key is None:
+        if os.path.exists(dotrc):
+            config = read_config(dotrc)
+
+            if key is None:
+                key = config.get("key")
+
+            if url is None:
+                url = config.get("url")
+
+            if verify is None:
+                verify = bool(int(config.get("verify", 1)))
+
+    if url is None or key is None or key is None:
+        raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
+
+    # If verify is still None, then we set to default value of True
+    if verify is None:
+        verify = True
+    return url, key, verify
+
+
 def toJSON(obj):
     to_json = getattr(obj, "toJSON", None)
     if callable(to_json):
@@ -248,6 +277,14 @@ class Result(object):
 class Client(object):
     logger = logging.getLogger("cdsapi")
 
+    def __new__(cls, url=None, key=None, *args, **kwargs):
+        _, token, _ = get_url_key_verify(url, key, None)
+        if ":" in token:
+            return super().__new__(cls)
+        import cads_api_client.legacy_api_client
+
+        return super().__new__(cads_api_client.legacy_api_client.LegacyApiClient)
+
     def __init__(
         self,
         url=None,
@@ -285,31 +322,7 @@ class Client(object):
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
 
-        if url is None:
-            url = os.environ.get("CDSAPI_URL")
-        if key is None:
-            key = os.environ.get("CDSAPI_KEY")
-        dotrc = os.environ.get("CDSAPI_RC", os.path.expanduser("~/.cdsapirc"))
-
-        if url is None or key is None:
-            if os.path.exists(dotrc):
-                config = read_config(dotrc)
-
-                if key is None:
-                    key = config.get("key")
-
-                if url is None:
-                    url = config.get("url")
-
-                if verify is None:
-                    verify = bool(int(config.get("verify", 1)))
-
-        if url is None or key is None or key is None:
-            raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
-
-        # If verify is still None, then we set to default value of True
-        if verify is None:
-            verify = True
+        url, key, verify = get_url_key_verify(url, key, verify)
 
         self.url = url
         self.key = key
