@@ -36,6 +36,11 @@ jobs:
       matrix:
         platform: [windows-latest, ubuntu-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          - platform: macos-latest
+            python-version: "3.8"
+          - platform: macos-latest
+            python-version: "3.9"
 
     name: Python ${{ matrix.python-version }} on ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
@@ -56,6 +61,7 @@ jobs:
           CDSAPI_URL: https://cds.climate.copernicus.eu/api/v2
           CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         run: |
+          pip install setuptools
           python setup.py develop
           pip install pytest
           pytest
