@@ -16,7 +16,6 @@ and write it into the configuration file, so it looks like::
     $ cat ~/.cdsapirc
     url: https://cds.climate.copernicus.eu/api/v2
     key: <UID>:<API key>
-    verify: 0
 
 Remember to agree to the Terms and Conditions of every dataset that you intend to download.
 
