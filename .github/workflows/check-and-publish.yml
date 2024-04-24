@@ -56,6 +56,7 @@ jobs:
           CDSAPI_URL: https://cds.climate.copernicus.eu/api/v2
           CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         run: |
+          pip install setuptools
           python setup.py develop
           pip install pytest
           pytest
