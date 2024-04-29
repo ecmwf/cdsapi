@@ -30,7 +30,7 @@ def read(fname):
     return io.open(file_path, encoding="utf-8").read()
 
 
-version = "0.6.1"
+version = "0.7.0"
 
 
 setuptools.setup(
@@ -45,6 +45,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
+        "cads-api-client>=0.9.2",
         "requests>=2.5.0",
         "tqdm",
     ],
@@ -54,11 +55,11 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Operating System :: OS Independent",

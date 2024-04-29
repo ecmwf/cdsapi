@@ -2,21 +2,24 @@ name: Check and publish
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
 
   pull_request:
-    branches: [ master ]
+    branches: [master]
+
+  # Trigger on public pull request approval
+  pull_request_target:
+    types: [labeled]
 
   release:
     types: [created]
-
 
 jobs:
   quality-checks:
     name: Code QA
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: pip install black flake8 isort
       - run: black --version
       - run: isort --version
@@ -27,11 +30,17 @@ jobs:
 
   platform-checks:
     needs: quality-checks
+    if: ${{ !github.event.pull_request.head.repo.fork && github.event.action != 'labeled' || github.event.label.name == 'approved-for-ci' }}
     strategy:
       fail-fast: false
       matrix:
         platform: [windows-latest, ubuntu-latest, macos-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          - platform: macos-latest
+            python-version: "3.8"
+          - platform: macos-latest
+            python-version: "3.9"
 
     name: Python ${{ matrix.python-version }} on ${{ matrix.platform }}
     runs-on: ${{ matrix.platform }}
@@ -39,7 +48,9 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - uses: actions/setup-python@v2
         with:
@@ -50,6 +61,7 @@ jobs:
           CDSAPI_URL: https://cds.climate.copernicus.eu/api/v2
           CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
         run: |
+          pip install setuptools
           python setup.py develop
           pip install pytest
           pytest
@@ -64,26 +76,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.8'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python setup.py sdist
-        twine upload dist/*
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+      - name: Build distributions
+        run: |
+          $CONDA/bin/python -m pip install build
+          $CONDA/bin/python -m build
+      - name: Publish a Python distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
-    - name: Notify climetlab
-      uses: mvasigh/dispatch-action@main
-      with:
+      - name: Notify climetlab
+        uses: mvasigh/dispatch-action@main
+        with:
           token: ${{ secrets.NOTIFY_ECMWFLIBS }}
           repo: climetlab
           owner: ecmwf

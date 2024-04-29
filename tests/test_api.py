@@ -5,6 +5,9 @@ import re
 import pytest
 import requests_mock
 
+import cads_api_client.legacy_api_client
+import pytest
+
 import cdsapi
 
 
@@ -64,3 +67,28 @@ def test_invalid_target(tmp_path: pathlib.Path) -> None:
     with pytest.raises(TypeError, match=re.compile("invalid value for target", re.I)):
         with target_file.open("wt") as target:
             cdsapi.api._open_target(target)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    "key,expected_client",
+    [
+        (
+            ":",
+            cdsapi.Client,
+        ),
+        (
+            "",
+            cads_api_client.legacy_api_client.LegacyApiClient,
+        ),
+    ],
+)
+@pytest.mark.parametrize("key_from_env", [True, False])
+def test_instantiation(monkeypatch, key, expected_client, key_from_env):
+    if key_from_env:
+        monkeypatch.setenv("CDSAPI_KEY", key)
+        c = cdsapi.Client()
+    else:
+        c = cdsapi.Client(key=key)
+    assert isinstance(c, cdsapi.Client)
+    assert isinstance(c, expected_client)
+    assert c.key == key
