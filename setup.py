@@ -44,6 +44,7 @@ setuptools.setup(
     long_description=read("README.rst"),
     packages=setuptools.find_packages(),
     include_package_data=True,
+    python_requires=">=3.8",
     install_requires=[
         "cads-api-client>=0.9.2",
         "requests>=2.5.0",
