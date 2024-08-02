@@ -2,7 +2,7 @@ name: Check and publish
 
 on:
   push:
-    branches: [master]
+    branches: [master, dummy-change]
 
   pull_request:
     branches: [master]
