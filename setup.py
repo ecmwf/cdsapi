@@ -45,7 +45,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
-        "cads-api-client>=0.9.2",
+        "cads-api-client>=1.2.0",
         "requests>=2.5.0",
         "tqdm",
     ],
