@@ -7,3 +7,4 @@ pytest-pep8
 pytest-runner
 pytest
 requests
+requests-mock
