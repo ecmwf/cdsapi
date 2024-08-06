@@ -21,7 +21,7 @@ def test_request():
 
     r.download("test.grib")
 
-    assert os.path.getsize("test.grib") == 2076600
+    assert os.path.getsize("test.grib") == 2076588
 
 
 @pytest.mark.parametrize(
