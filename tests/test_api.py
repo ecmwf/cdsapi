@@ -21,7 +21,6 @@ def test_request():
 
     r.download("test.grib")
 
-    # Allow for minor changes due to differences in MARS client configuration
     assert os.path.getsize("test.grib") == 2076588
 
 
