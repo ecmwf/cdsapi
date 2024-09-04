@@ -35,7 +35,7 @@ Perform a small test retrieve of ERA5 data::
                "date": "2017-12-01/2017-12-31",
                "time": "12:00",
                "format": "grib"
-           }, 'download.grib')
+           }).download(target='download.grib')
     >>>
 
 
