@@ -30,7 +30,7 @@ def read(fname):
     return io.open(file_path, encoding="utf-8").read()
 
 
-version = "0.7.2"
+version = "0.7.3"
 
 
 setuptools.setup(
@@ -45,7 +45,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=[
-        "cads-api-client>=1.3.0",
+        "cads-api-client>=1.3.2",
         "requests>=2.5.0",
         "tqdm",
     ],
