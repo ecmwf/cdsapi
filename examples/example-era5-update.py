@@ -29,7 +29,7 @@ sleep = 30
 while True:
     r.update()
     reply = r.reply
-    r.info("Request ID: %s, state: %s" % (reply["request_id"], reply["state"]))
+    r.info(f"Request ID: {reply['request_id']}, state: {reply['state']}")
 
     if reply["state"] == "completed":
         break
@@ -46,7 +46,7 @@ while True:
                 break
             r.error("  %s", n)
         raise Exception(
-            "%s. %s." % (reply["error"].get("message"), reply["error"].get("reason"))
+            f"{reply['error'].get('message')}. {reply['error'].get('reason')}."
         )
 
 r.download("test.nc")
