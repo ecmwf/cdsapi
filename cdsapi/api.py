@@ -13,8 +13,8 @@ import logging
 import os
 import time
 import uuid
-
 from importlib.metadata import version
+
 import requests
 
 try:
