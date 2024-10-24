@@ -1,3 +1,8 @@
+cdsapi
+------
+
+For a more detailed description on how to use the cdsapi, please visit: https://cds.climate.copernicus.eu/how-to-api
+
 
 Install
 -------
@@ -14,8 +19,8 @@ Get your user ID (UID) and API key from the CDS portal at the address https://cd
 and write it into the configuration file, so it looks like::
 
     $ cat ~/.cdsapirc
-    url: https://cds.climate.copernicus.eu/api/v2
-    key: <UID>:<API key>
+    url: https://cds.climate.copernicus.eu/api
+    key: <PERSONAL-ACCESS-TOKEN>
 
 Remember to agree to the Terms and Conditions of every dataset that you intend to download.
 
