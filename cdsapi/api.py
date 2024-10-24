@@ -65,7 +65,7 @@ def get_url_key_verify(url, key, verify):
             if verify is None:
                 verify = bool(int(config.get("verify", 1)))
 
-    if url is None or key is None or key is None:
+    if url is None or key is None:
         raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
 
     # If verify is still None, then we set to default value of True
