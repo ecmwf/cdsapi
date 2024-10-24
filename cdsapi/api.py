@@ -14,7 +14,7 @@ import os
 import time
 import uuid
 
-import pkg_resources
+from importlib.metadata import version
 import requests
 
 try:
@@ -347,8 +347,7 @@ class Client(object):
         self.session = session
         self.session.auth = tuple(self.key.split(":", 2))
         self.session.headers = {
-            "User-Agent": "cdsapi/%s"
-            % pkg_resources.get_distribution("cdsapi").version,
+            "User-Agent": f"cdsapi/{version('cdsapi')}",
         }
 
         assert len(self.session.auth) == 2, (
