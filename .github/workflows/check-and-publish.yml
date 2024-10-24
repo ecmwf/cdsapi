@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [windows-latest, ubuntu-latest, macos-latest]
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
         exclude:
           - platform: macos-latest
             python-version: "3.8"
@@ -58,8 +58,8 @@ jobs:
 
       - name: Tests
         env:
-          CDSAPI_URL: https://cds.climate.copernicus.eu/api/v2
-          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+          CDSAPI_URL: https://cds.climate.copernicus.eu/api
+          CDSAPI_KEY: ${{ secrets.CDSAPI_KEY_2024 }}
         run: |
           pip install setuptools
           python setup.py develop

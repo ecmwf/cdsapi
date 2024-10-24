@@ -44,8 +44,9 @@ setuptools.setup(
     long_description=read("README.rst"),
     packages=setuptools.find_packages(),
     include_package_data=True,
+    python_requires=">=3.8",
     install_requires=[
-        "cads-api-client>=1.3.2",
+        "cads-api-client>=1.4.7",
         "requests>=2.5.0",
         "tqdm",
     ],
@@ -60,6 +61,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Operating System :: OS Independent",
