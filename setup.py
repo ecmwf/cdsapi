@@ -46,7 +46,7 @@ setuptools.setup(
     include_package_data=True,
     python_requires=">=3.8",
     install_requires=[
-        # "datapi",  
+        # "datapi",
         "requests>=2.5.0",
         "tqdm",
     ],

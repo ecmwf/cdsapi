@@ -22,7 +22,6 @@ try:
 except ImportError:
     from urlparse import urljoin
 
-from datapi.legacy_api_client import LegacyApiClient
 from tqdm import tqdm
 
 
@@ -283,7 +282,9 @@ class Client(object):
         if ":" in token:
             return super().__new__(cls)
 
-        return super().__new__(LegacyApiClient)
+        import datapi.legacy_api_client
+
+        return super().__new__(datapi.legacy_api_client.LegacyApiClient)
 
     def __init__(
         self,
