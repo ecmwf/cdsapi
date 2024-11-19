@@ -281,9 +281,10 @@ class Client(object):
         _, token, _ = get_url_key_verify(url, key, None)
         if ":" in token:
             return super().__new__(cls)
-        import cads_api_client.legacy_api_client
 
-        return super().__new__(cads_api_client.legacy_api_client.LegacyApiClient)
+        import datapi.legacy_api_client
+
+        return super().__new__(datapi.legacy_api_client.LegacyApiClient)
 
     def __init__(
         self,

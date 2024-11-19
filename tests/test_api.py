@@ -1,6 +1,6 @@
 import os
 
-import cads_api_client.legacy_api_client
+import datapi.legacy_api_client
 import pytest
 
 import cdsapi
@@ -33,7 +33,7 @@ def test_request():
         ),
         (
             "",
-            cads_api_client.legacy_api_client.LegacyApiClient,
+            datapi.legacy_api_client.LegacyApiClient,
         ),
     ],
 )
