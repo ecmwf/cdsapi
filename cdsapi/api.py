@@ -308,6 +308,7 @@ class Client(object):
         forget=False,
         session=requests.Session(),
     ):
+        self.logger.setLevel(logging.NOTSET)
         if not quiet:
             if debug:
                 level = logging.DEBUG
