@@ -46,7 +46,7 @@ setuptools.setup(
     include_package_data=True,
     python_requires=">=3.8",
     install_requires=[
-        "ecmwf-datastores-client @ git+https://github.com/ecmwf/ecmwf-datastores-client.git",
+        "ecmwf-datastores-client",
         "requests>=2.5.0",
         "tqdm",
     ],
