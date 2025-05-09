@@ -24,6 +24,7 @@ and write it into the configuration file, so it looks like::
 
 Remember to agree to the Terms and Conditions of every dataset that you intend to download.
 
+To change the location of `~/.cdsapirc` set the `CDSAPI_RC` environment variable.
 
 Test
 ----
