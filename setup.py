@@ -44,7 +44,7 @@ setuptools.setup(
     long_description=read("README.rst"),
     packages=setuptools.find_packages(),
     include_package_data=True,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=[
         "ecmwf-datastores-client",
         "requests>=2.5.0",
@@ -56,7 +56,6 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
