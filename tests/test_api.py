@@ -1,6 +1,6 @@
 import os
 
-import datapi.legacy_api_client
+import ecmwf.datastores.legacy_client
 import pytest
 
 import cdsapi
@@ -33,7 +33,7 @@ def test_request():
         ),
         (
             "",
-            datapi.legacy_api_client.LegacyApiClient,
+            ecmwf.datastores.legacy_client.LegacyClient,
         ),
     ],
 )
