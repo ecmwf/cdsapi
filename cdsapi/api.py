@@ -282,9 +282,9 @@ class Client(object):
         if ":" in token:
             return super().__new__(cls)
 
-        import datapi.legacy_api_client
+        from ecmwf.datastores.legacy_client import LegacyClient
 
-        return super().__new__(datapi.legacy_api_client.LegacyApiClient)
+        return super().__new__(LegacyClient)
 
     def __init__(
         self,
