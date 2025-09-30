@@ -30,7 +30,7 @@ def read(fname):
     return io.open(file_path, encoding="utf-8").read()
 
 
-version = "0.7.7.dev0"
+version = "0.7.7"
 
 
 setuptools.setup(
@@ -46,7 +46,7 @@ setuptools.setup(
     include_package_data=True,
     python_requires=">=3.8",
     install_requires=[
-        "ecmwf-datastores-client",
+        "ecmwf-datastores-client>=0.4.0",
         "requests>=2.5.0",
         "tqdm",
     ],
