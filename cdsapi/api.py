@@ -598,9 +598,17 @@ class Client(object):
         return results
 
     def download(self, results, targets=None):
+        """Download results to a single path or an iterable of target paths.
+
+        Targets are consumed in result traversal order. If no target is
+        provided, each result uses its default filename.
+        """
         if targets:
-            # Make a copy
-            targets = [t for t in targets]
+            if isinstance(targets, (str, bytes, os.PathLike)):
+                targets = [targets]
+            else:
+                # Make a copy so the caller's targets are not consumed.
+                targets = list(targets)
         return self._download(results, targets)
 
     def remote(self, url):
