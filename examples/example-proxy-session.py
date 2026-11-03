@@ -9,6 +9,8 @@
 # does it submit to any jurisdiction.
 
 # Route all client traffic through a proxy by passing a custom requests.Session.
+# Note: with new API tokens, the final file download honours the session only
+# once ecmwf/ecmwf-datastores-client#74 is released.
 
 import requests
 
