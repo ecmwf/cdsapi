@@ -44,6 +44,25 @@ Perform a small test retrieve of ERA5 data::
     >>>
 
 
+Using a proxy
+-------------
+
+Pass a ``requests.Session`` configured with your proxies to the client::
+
+    import requests
+    import cdsapi
+
+    session = requests.Session()
+    session.proxies = {
+        "http": "http://user:pass@proxy.example.com:3128",
+        "https": "http://user:pass@proxy.example.com:3128",
+    }
+    client = cdsapi.Client(session=session)
+
+The standard ``HTTP_PROXY`` / ``HTTPS_PROXY`` environment variables are also
+honoured by ``requests``. See ``examples/example-proxy-session.py``.
+
+
 License
 -------
 

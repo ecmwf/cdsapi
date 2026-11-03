@@ -604,7 +604,7 @@ class Client(object):
         return self._download(results, targets)
 
     def remote(self, url):
-        r = requests.head(url)
+        r = self.session.head(url, verify=self.verify, timeout=self.timeout)
         reply = dict(
             location=url,
             content_length=r.headers["Content-Length"],
