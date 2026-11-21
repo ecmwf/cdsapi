@@ -13,6 +13,7 @@ import logging
 import os
 import time
 import uuid
+import warnings
 from importlib.metadata import version
 
 import requests
@@ -65,8 +66,15 @@ def get_url_key_verify(url, key, verify):
             if verify is None:
                 verify = bool(int(config.get("verify", 1)))
 
-    if url is None or key is None:
+    if url is None:
         raise Exception("Missing/incomplete configuration file: %s" % (dotrc))
+
+    if key is None:
+        key = ""
+        warnings.warn(
+            "The API key is missing, falling back to anonymous access.",
+            UserWarning,
+        )
 
     # If verify is still None, then we set to default value of True
     if verify is None:
